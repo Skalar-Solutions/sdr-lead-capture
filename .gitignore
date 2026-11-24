@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.output/
+.wxt/
+.turbo/
+.wrangler/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+.dev.vars
+
+.DS_Store
+*.log
+
+# release artifacts / signing keys
+*.crx
+*.pem
+*.zip
