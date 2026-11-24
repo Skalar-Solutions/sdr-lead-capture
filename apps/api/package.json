@@ -1,0 +1,26 @@
+{
+  "name": "@sdr/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "db:migrate": "wrangler d1 migrations apply sdr-leads --local",
+    "db:migrate:remote": "wrangler d1 migrations apply sdr-leads --remote",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@sdr/core": "workspace:*",
+    "hono": "^4.10.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "typescript": "^7.0.2",
+    "vitest": "^3.2.0",
+    "wrangler": "^4.0.0"
+  }
+}

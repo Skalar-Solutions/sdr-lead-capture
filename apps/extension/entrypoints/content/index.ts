@@ -1,7 +1,14 @@
+import "@/assets/app.css";
+
+import { PortalContainerProvider } from "@sdr/ui/lib/portal-container";
+import { createElement } from "react";
+import ReactDOM from "react-dom/client";
 import { browser } from "wxt/browser";
 import { defineContentScript } from "wxt/utils/define-content-script";
+import { createShadowRootUi } from "wxt/utils/content-script-ui/shadow-root";
 
 import { extractBusinessData } from "./scraper";
+import { ContentApp } from "./ui/ContentApp";
 
 const MAPS_MATCHES = [
   "*://www.google.com/maps/*",
@@ -17,7 +24,8 @@ interface ScrapeRequest {
 export default defineContentScript({
   matches: MAPS_MATCHES,
   runAt: "document_idle",
-  main() {
+  cssInjectionMode: "ui",
+  async main(ctx) {
     browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if ((message as ScrapeRequest | undefined)?.type !== "SDR_SCRAPE") return;
 
@@ -30,5 +38,27 @@ export default defineContentScript({
         });
       }
     });
+
+    const ui = await createShadowRootUi(ctx, {
+      name: "sdr-capture-ui",
+      position: "overlay",
+      anchor: "body",
+      onMount(container) {
+        const root = ReactDOM.createRoot(container);
+        root.render(
+          createElement(
+            PortalContainerProvider,
+            { container },
+            createElement(ContentApp),
+          ),
+        );
+        return root;
+      },
+      onRemove(root) {
+        root?.unmount();
+      },
+    });
+
+    ui.mount();
   },
 });

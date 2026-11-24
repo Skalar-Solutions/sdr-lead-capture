@@ -6,6 +6,7 @@
   "exports": {
     "./components/*": "./src/components/*.tsx",
     "./lib/*": "./src/lib/*.ts",
+    "./lib/portal-container": "./src/lib/portal-container.tsx",
     "./hooks/*": "./src/hooks/*.ts",
     "./styles/*": "./src/styles/*"
   },

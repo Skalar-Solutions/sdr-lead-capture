@@ -18,7 +18,8 @@ export default defineConfig({
     },
     // Catatan: `key` sengaja belum diisi. Generate sekali sebelum daftar OAuth client
     // supaya extension ID stabil antara dev, staging, dan produksi. Jangan ganti setelah rilis.
-    permissions: ["storage"],
+    permissions: ["storage", "alarms"],
+    optional_host_permissions: ["http://*/*", "https://*/*"],
     host_permissions: [
       "*://www.google.com/maps/*",
       "*://www.google.co.id/maps/*",
