@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDR Lead Capture</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="extension-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-logo">S</div>
+        <div class="brand-text">
+          <h1>SDR Lead Capture</h1>
+          <span class="badge-role">Software Sales</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnViewLeads" class="btn-icon" title="Lihat Staging Leads & Export">📋 Staging</button>
+        <div class="online-indicator" title="Connected & Ready">
+          <span class="pulse-dot"></span>
+          <span class="status-text">Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Source Banner & Auto-Scrape Status -->
+    <div class="source-bar">
+      <div class="source-info">
+        <span class="source-icon" id="sourceIcon">📍</span>
+        <span id="sourceLabel">Memeriksa halaman tab...</span>
+      </div>
+      <button id="btnRescrape" class="btn-xs" title="Ambil ulang data dari Google Maps">🔄 Re-scrape</button>
+    </div>
+
+    <!-- Duplicate Warning Banner (hidden by default) -->
+    <div id="duplicateBanner" class="alert-banner warning-banner hidden">
+      <span>⚠️</span>
+      <span id="duplicateText">Lead ini sudah pernah di-submit sebelumnya!</span>
+    </div>
+
+    <!-- HOT LEAD Alert Banner -->
+    <div id="hotLeadBanner" class="alert-banner hot-banner hidden">
+      <span>🔥</span>
+      <span id="hotLeadText">HOT LEAD — Bisnis ini TIDAK punya website!</span>
+    </div>
+
+    <!-- Scrollable Form Body -->
+    <main class="form-body">
+      <!-- Section: Company Info -->
+      <section class="form-section">
+        <div class="section-title">
+          <span class="icon">🏢</span>
+          <h2>Company Info</h2>
+          <div class="divider"></div>
+        </div>
+
+        <div class="field-group">
+          <label for="companyName">Nama Bisnis / Perusahaan <span class="req">*</span></label>
+          <input type="text" id="companyName" placeholder="Contoh: Warung Steak Pak Joko" required>
+        </div>
+
+        <div class="form-row">
+          <div class="field-group">
+            <label for="industry">Kategori / Industri <span class="req">*</span></label>
+            <select id="industry">
+              <option value="F&B / Restaurant">F&B / Restaurant</option>
+              <option value="Retail / Toko">Retail / Toko</option>
+              <option value="Klinik / Healthcare">Klinik / Healthcare</option>
+              <option value="Salon / Beauty">Salon / Beauty</option>
+              <option value="Gym / Fitness">Gym / Fitness</option>
+              <option value="Jasa / Services">Jasa / Services</option>
+              <option value="Pendidikan / Kursus">Pendidikan / Kursus</option>
+              <option value="Property / Real Estate">Property / Real Estate</option>
+              <option value="Automotive">Automotive</option>
+              <option value="Travel / Hotel">Travel / Hotel</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="branches">Estimasi Cabang</label>
+            <select id="branches">
+              <option value="1">1 (Single)</option>
+              <option value="2-5" selected>2 - 5 Cabang</option>
+              <option value="6-15">6 - 15 Cabang</option>
+              <option value="15+">15+ Cabang</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field-group">
+            <label for="ratingReviews">Google Rating & Review</label>
+            <input type="text" id="ratingReviews" placeholder="4.5 (1,200 ulasan)" readonly class="readonly-input">
+          </div>
+          <div class="field-group">
+            <label for="mapsCategory">Kategori Maps</label>
+            <input type="text" id="mapsCategory" placeholder="e.g. Steakhouse" readonly class="readonly-input">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="address">Alamat</label>
+          <input type="text" id="address" placeholder="Jl. Raya No. ...">
+        </div>
+      </section>
+
+      <!-- Section: Digital Presence Assessment (KEY FOR SOFTWARE SDR) -->
+      <section class="form-section highlight-section">
+        <div class="section-title">
+          <span class="icon">🌐</span>
+          <h2>Digital Presence</h2>
+          <div class="divider"></div>
+          <span id="digitalScoreBadge" class="score-badge hot">Score: 2/10 🔥</span>
+        </div>
+
+        <label class="sub-label">Status Website Saat Ini <span class="req">*</span></label>
+        <div class="status-grid">
+          <div class="status-card selected" data-status="none">
+            <div class="card-icon">🚫</div>
+            <div class="card-title">Tidak Ada</div>
+            <div class="card-desc">No website</div>
+          </div>
+          <div class="status-card" data-status="outdated">
+            <div class="card-icon">👴</div>
+            <div class="card-title">Outdated</div>
+            <div class="card-desc">Jadul / lama</div>
+          </div>
+          <div class="status-card" data-status="bad-ux">
+            <div class="card-icon">😵</div>
+            <div class="card-title">Bad UX</div>
+            <div class="card-desc">Berantakan</div>
+          </div>
+          <div class="status-card" data-status="decent">
+            <div class="card-icon">🤷</div>
+            <div class="card-title">Lumayan</div>
+            <div class="card-desc">Bisa di-upgrade</div>
+          </div>
+        </div>
+
+        <div class="field-group mt-2">
+          <label for="websiteUrl">URL Website (kalau ada)</label>
+          <input type="url" id="websiteUrl" placeholder="Kosongkan jika tidak punya website">
+        </div>
+
+        <label class="sub-label mt-2">Digital Gaps yang Ditemukan:</label>
+        <div class="gaps-list">
+          <label class="checkbox-item">
+            <input type="checkbox" id="gapNoWeb" checked>
+            <span>🚫 Tidak punya website sama sekali</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="gapMobile" checked>
+            <span>📱 Tidak mobile-friendly / responsif</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="gapOrdering" checked>
+            <span>🛒 Tidak ada sistem order / booking online</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="gapInstagramOnly" checked>
+            <span>📲 Hanya mengandalkan Instagram/TikTok</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="gapNoSeo">
+            <span>📊 Tidak ada Google SEO / Analytics</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="gapNoPayment">
+            <span>💳 Tidak ada payment gateway otomatis</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Section: Service Opportunity -->
+      <section class="form-section">
+        <div class="section-title">
+          <span class="icon">💼</span>
+          <h2>Service Opportunity</h2>
+          <div class="divider"></div>
+        </div>
+
+        <label class="sub-label">Solusi yang Bisa Kita Tawarkan:</label>
+        <div class="chips-container" id="serviceChips">
+          <span class="chip active" data-service="Website Development">🌐 Website Dev</span>
+          <span class="chip active" data-service="E-Commerce / Ordering">🛒 E-Commerce</span>
+          <span class="chip" data-service="UI/UX Redesign">🎨 Redesign</span>
+          <span class="chip" data-service="Mobile App">📱 Mobile App</span>
+          <span class="chip" data-service="Custom Software">⚙️ Custom Software</span>
+          <span class="chip" data-service="SEO Optimization">📈 SEO</span>
+          <span class="chip" data-service="Chatbot / CRM">🤖 Chatbot / CRM</span>
+        </div>
+
+        <div class="field-group mt-2">
+          <label for="dealSize">Estimasi Deal Size</label>
+          <select id="dealSize">
+            <option value="Small (< 10 jt)">💰 Small (< 10 jt)</option>
+            <option value="Medium (10-50 jt)" selected>💰💰 Medium (10 - 50 jt)</option>
+            <option value="Large (50-150 jt)">💰💰💰 Large (50 - 150 jt)</option>
+            <option value="Enterprise (150 jt+)">💰💰💰💰 Enterprise (150 jt+)</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Section: Contact Details -->
+      <section class="form-section">
+        <div class="section-title">
+          <span class="icon">📞</span>
+          <h2>Kontak & PIC</h2>
+          <div class="divider"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="field-group">
+            <label for="phone">Telepon <span class="req">*</span></label>
+            <input type="tel" id="phone" placeholder="021-xxxx / 08xx" required>
+          </div>
+          <div class="field-group">
+            <label for="whatsapp">WhatsApp</label>
+            <input type="tel" id="whatsapp" placeholder="08xxxxxxxxxx">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="kontak@bisnis.com">
+          </div>
+          <div class="field-group">
+            <label for="instagram">Instagram</label>
+            <input type="text" id="instagram" placeholder="@namaakun">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field-group">
+            <label for="picName">Nama PIC</label>
+            <input type="text" id="picName" placeholder="Owner / Manager">
+          </div>
+          <div class="field-group">
+            <label for="picRole">Jabatan PIC</label>
+            <select id="picRole">
+              <option value="">— Pilih —</option>
+              <option value="Owner">Owner / Pendiri</option>
+              <option value="Manager">Manager Operasional</option>
+              <option value="Marketing">Marketing / Sales</option>
+              <option value="Admin">Admin</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Priority & Notes -->
+      <section class="form-section">
+        <div class="field-group">
+          <label>Tingkat Prioritas Lead</label>
+          <div class="priority-picker" id="priorityStars">
+            <span class="star active" data-rating="1">⭐</span>
+            <span class="star active" data-rating="2">⭐</span>
+            <span class="star active" data-rating="3">⭐</span>
+            <span class="star active" data-rating="4">⭐</span>
+            <span class="star" data-rating="5">⭐</span>
+            <span class="priority-label" id="priorityLabel">High Priority</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="notes">Catatan untuk Kepala Sales</label>
+          <textarea id="notes" rows="2" placeholder="Contoh: Bisnis rame (2K+ reviews) tapi belum ada website. Cocok banget ditawarin web + booking system..."></textarea>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Action Bar -->
+    <footer class="app-footer">
+      <div class="action-buttons">
+        <button id="btnSkip" class="btn btn-secondary" title="Lewati lead ini">🚫 Skip</button>
+        <button id="btnDraft" class="btn btn-secondary" title="Simpan sebagai draft">📝 Draft</button>
+        <button id="btnSubmit" class="btn btn-primary" title="Submit lead ke staging database">✅ Submit ke Staging</button>
+      </div>
+
+      <!-- Live Session Stats -->
+      <div class="session-stats">
+        <div class="stats-text">
+          <span>Hari ini:</span>
+          <strong id="statSubmitted" class="text-success">0</strong> subm.
+          <span>·</span>
+          <strong id="statDrafts" class="text-warning">0</strong> draft
+          <span>·</span>
+          <strong id="statHotLeads" class="text-danger">0 🔥</strong> hot
+        </div>
+        <div class="target-progress">
+          <div class="progress-bar-bg">
+            <div id="targetProgressBar" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <span id="targetText" class="progress-label">0 / 25 leads</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

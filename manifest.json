@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "SDR Lead Capture & Digital Gap Analyzer",
+  "version": "1.1.0",
+  "description": "Capture potential client leads directly from Google Maps and evaluate their digital presence for software & website development sales.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Open SDR Lead Capture",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "*://*.google.com/maps/*",
+    "*://*.google.co.id/maps/*",
+    "*://www.google.com/*",
+    "*://www.google.co.id/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.google.com/maps/*",
+        "*://*.google.co.id/maps/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "options_ui": {
+    "page": "leads.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Open SDR Lead Capture Popup"
+    }
+  }
+}
