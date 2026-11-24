@@ -1,0 +1,4 @@
+# Copy ke `.dev.vars` (jangan commit).
+# Token ini dipakai extension/dashboard saat development.
+DEV_AUTH_TOKEN=dev-token-ganti-ini
+GOOGLE_CLIENT_ID=

@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@import "@sdr/ui/styles/tokens.css";
+
+@source "../entrypoints";
+@source "../../../packages/ui/src";
