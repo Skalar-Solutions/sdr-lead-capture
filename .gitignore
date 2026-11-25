@@ -23,3 +23,15 @@ coverage/
 # hasil e2e & artefak rilis
 artifacts/
 release/
+
+# build extension di root (untuk Load unpacked)
+/manifest.json
+/popup.html
+/dashboard.html
+/background.js
+/assets/
+/chunks/
+/content-scripts/
+/icon16.png
+/icon48.png
+/icon128.png

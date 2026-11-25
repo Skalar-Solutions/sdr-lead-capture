@@ -11,7 +11,8 @@
     "zip": "pnpm --filter @sdr/extension zip",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "e2e": "node scripts/e2e-extension.mjs"
+    "e2e": "node scripts/e2e-extension.mjs",
+    "sync-root": "cp -R apps/extension/.output/chrome-mv3/. ."
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
