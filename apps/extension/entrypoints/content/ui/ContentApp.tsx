@@ -1,23 +1,34 @@
 import { Badge } from "@sdr/ui/components/ui/badge";
 import { Button } from "@sdr/ui/components/ui/button";
-import { ClipboardList, RefreshCw, Target, X } from "lucide-react";
+import { ClipboardList, ListChecks, RefreshCw, Target, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CaptureCard } from "@/components/capture-card";
 import { toCapture, type Capture } from "@/lib/capture";
-import { addCapture, countCaptures, openDashboard } from "@/lib/store";
+import { addCaptureIfNew, countCaptures, openDashboard } from "@/lib/store";
 
+import { findFeed } from "../bulk";
 import { extractBusinessData } from "../scraper";
+import { BulkPanel } from "./BulkPanel";
+
+type Mode = "single" | "bulk";
+
+const FONT_STACK =
+  'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
 export function ContentApp() {
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<Mode>("single");
   const [capture, setCapture] = useState<Capture | null>(null);
   const [savedCount, setSavedCount] = useState(0);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [hasFeed, setHasFeed] = useState(false);
 
   const lastCapturedPlace = useRef<string>("");
+  // Saat bulk scraping jalan, extension sendiri yang klik tempat -> auto-detect dimatikan.
+  const bulkRunning = useRef(false);
 
   const refreshSaved = useCallback(async () => {
     setSavedCount(await countCaptures());
@@ -37,6 +48,7 @@ export function ContentApp() {
     }
     setCapture(toCapture(data));
     setSaved(false);
+    setMode("single");
     setNotice(
       `Terekstrak: ${data.companyName}${data.isSocialMediaOnly ? ` · ${data.socialType} only` : ""}`,
     );
@@ -45,9 +57,10 @@ export function ContentApp() {
     }
   }, []);
 
-  // Auto-detect when intern clicks a business or URL changes in Google Maps
+  // Auto-detect saat intern klik tempat / URL berubah di Google Maps
   useEffect(() => {
     function checkPlaceChange() {
+      if (bulkRunning.current) return;
       const data = extractBusinessData(document, location.href);
       if (data.companyName && data.companyName !== lastCapturedPlace.current) {
         lastCapturedPlace.current = data.companyName;
@@ -56,6 +69,7 @@ export function ContentApp() {
     }
 
     function handleClick(e: MouseEvent) {
+      if (bulkRunning.current || !e.isTrusted) return;
       const target = (e.target as HTMLElement)?.closest(
         "a[href*='/maps/place/'], div.Nv2PK, div.hfpxzc, [jsaction*='pane.wfvdle']",
       );
@@ -71,6 +85,7 @@ export function ContentApp() {
 
     let lastUrl = location.href;
     const interval = setInterval(() => {
+      setHasFeed(Boolean(findFeed()));
       if (location.href !== lastUrl) {
         lastUrl = location.href;
         if (location.href.includes("/maps/place/")) {
@@ -91,13 +106,23 @@ export function ContentApp() {
     setOpen(true);
   }
 
+  function openBulk() {
+    setMode("bulk");
+    setNotice("Scrape semua hasil pencarian");
+    setOpen(true);
+  }
+
   async function handleSave(updatedCapture: Capture) {
     setSaving(true);
     try {
-      const count = await addCapture(updatedCapture);
+      const { added, count } = await addCaptureIfNew(updatedCapture);
       setSavedCount(count);
       setSaved(true);
-      setNotice(`Tersimpan: ${updatedCapture.companyName}`);
+      setNotice(
+        added
+          ? `Tersimpan: ${updatedCapture.companyName}`
+          : `Sudah ada di data: ${updatedCapture.companyName}`,
+      );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));
     } finally {
@@ -105,36 +130,78 @@ export function ContentApp() {
     }
   }
 
+  function handleBulkRunning(running: boolean) {
+    bulkRunning.current = running;
+    if (!running) {
+      // Jangan langsung auto-popup tempat terakhir yang dibuka bot.
+      lastCapturedPlace.current = extractBusinessData(document, location.href).companyName;
+    }
+  }
+
   if (!open) {
     return (
-      <div className="fixed bottom-6 right-6 z-[2147483647] flex flex-col items-end gap-2">
+      <div
+        style={{ fontFamily: FONT_STACK }}
+        className="fixed bottom-6 right-6 z-[2147483647] flex flex-col items-end gap-2"
+      >
         {notice ? (
           <div className="max-w-[320px] rounded-md bg-foreground px-3 py-1.5 text-xs text-background shadow-lg">
             {notice}
           </div>
         ) : null}
-        <Button size="lg" className="rounded-full shadow-xl" onClick={handleOpen}>
-          <Target className="size-4" />
-          SDR Capture
-          {savedCount > 0 ? <Badge variant="secondary">{savedCount}</Badge> : null}
-        </Button>
+        <div className="flex items-center gap-2">
+          {hasFeed ? (
+            <Button
+              size="lg"
+              variant="secondary"
+              className="rounded-full border shadow-xl"
+              onClick={openBulk}
+            >
+              <ListChecks className="size-4" />
+              Scrape Semua
+            </Button>
+          ) : null}
+          <Button size="lg" className="rounded-full shadow-xl" onClick={handleOpen}>
+            <Target className="size-4" />
+            SDR Capture
+            {savedCount > 0 ? <Badge variant="secondary">{savedCount}</Badge> : null}
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-[2147483647] w-[400px] max-w-[calc(100vw-2rem)]">
+    <div
+      style={{ fontFamily: FONT_STACK }}
+      className="fixed bottom-6 right-6 z-[2147483647] w-[400px] max-w-[calc(100vw-2rem)]"
+    >
       <div className="mb-2 flex items-center gap-1 rounded-md bg-foreground px-2 py-1.5 text-xs text-background shadow-lg">
         <span className="min-w-0 flex-1 truncate">{notice || "Capture lead dari Maps"}</span>
-        <Button
-          size="icon"
-          variant="ghost"
-          title="Scrape ulang"
-          className="size-6 text-background hover:bg-background/10"
-          onClick={() => scrape(false)}
-        >
-          <RefreshCw className="size-3.5" />
-        </Button>
+        {mode === "single" ? (
+          <>
+            {hasFeed ? (
+              <Button
+                size="icon"
+                variant="ghost"
+                title="Scrape semua hasil pencarian"
+                className="size-6 text-background hover:bg-background/10"
+                onClick={openBulk}
+              >
+                <ListChecks className="size-3.5" />
+              </Button>
+            ) : null}
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Scrape ulang"
+              className="size-6 text-background hover:bg-background/10"
+              onClick={() => scrape(false)}
+            >
+              <RefreshCw className="size-3.5" />
+            </Button>
+          </>
+        ) : null}
         <Button
           size="icon"
           variant="ghost"
@@ -149,14 +216,31 @@ export function ContentApp() {
           variant="ghost"
           title="Tutup"
           className="size-6 text-background hover:bg-background/10"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            if (bulkRunning.current) return;
+            setOpen(false);
+            setMode("single");
+          }}
         >
           <X className="size-3.5" />
         </Button>
       </div>
 
-      {capture ? (
+      {mode === "bulk" ? (
+        <BulkPanel
+          onClose={() => {
+            setMode("single");
+            setOpen(false);
+          }}
+          onRunningChange={handleBulkRunning}
+          onSaved={(count) => {
+            setSavedCount(count);
+            setNotice("Bulk scrape selesai");
+          }}
+        />
+      ) : capture ? (
         <CaptureCard
+          key={capture.id}
           capture={capture}
           saving={saving}
           saved={saved}

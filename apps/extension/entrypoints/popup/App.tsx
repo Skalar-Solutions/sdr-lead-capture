@@ -11,7 +11,7 @@ import type { ScrapedPlace } from "@/entrypoints/content/scraper";
 import { toCapture, type Capture } from "@/lib/capture";
 import { buildCsvFilename, capturesToCsv } from "@/lib/csv-template";
 import { downloadCsvFile } from "@/lib/download";
-import { addCapture, countCaptures, openDashboard, readCaptures } from "@/lib/store";
+import { addCaptureIfNew, countCaptures, openDashboard, readCaptures } from "@/lib/store";
 
 type SourceStatus = { tone: "info" | "warn"; text: string };
 
@@ -78,9 +78,13 @@ export default function App() {
   async function handleSave(updatedCapture: Capture) {
     setSaving(true);
     try {
-      const count = await addCapture(updatedCapture);
+      const { added, count } = await addCaptureIfNew(updatedCapture);
       setSavedCount(count);
       setSaved(true);
+      if (!added) {
+        toast.info("Sudah ada di data", { description: updatedCapture.companyName });
+        return;
+      }
       toast.success("Tersimpan ke CSV", {
         description: `${updatedCapture.companyName}${updatedCapture.website ? "" : " · 🔥 Hot lead"}`,
       });

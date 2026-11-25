@@ -3,3 +3,11 @@
 
 @source "../entrypoints";
 @source "../../../packages/ui/src";
+
+/* Shadow root di Google Maps tidak mewarisi font halaman -> set eksplisit. */
+:host,
+html,
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+}

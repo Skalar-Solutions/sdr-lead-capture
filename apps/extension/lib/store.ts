@@ -1,6 +1,7 @@
 import { browser } from "wxt/browser";
 
 import type { Capture } from "./capture";
+import { isDuplicate } from "./dedupe";
 
 const CAPTURES_KEY = "sdr_captures";
 
@@ -23,6 +24,32 @@ export async function addCapture(capture: Capture): Promise<number> {
 
 export async function countCaptures(): Promise<number> {
   return (await readCaptures()).length;
+}
+
+/** Simpan satu capture kalau belum ada (cek Place ID / nama+alamat). */
+export async function addCaptureIfNew(
+  capture: Capture,
+): Promise<{ added: boolean; count: number }> {
+  const captures = await readCaptures();
+  if (isDuplicate(capture, captures)) return { added: false, count: captures.length };
+  const next = [capture, ...captures];
+  await writeCaptures(next);
+  return { added: true, count: next.length };
+}
+
+/** Simpan banyak capture sekaligus, duplikat dilewati. */
+export async function addManyCaptures(
+  items: readonly Capture[],
+): Promise<{ added: number; skipped: number; count: number }> {
+  const captures = await readCaptures();
+  const fresh: Capture[] = [];
+  for (const item of items) {
+    if (isDuplicate(item, captures) || isDuplicate(item, fresh)) continue;
+    fresh.push(item);
+  }
+  const next = [...fresh, ...captures];
+  if (fresh.length > 0) await writeCaptures(next);
+  return { added: fresh.length, skipped: items.length - fresh.length, count: next.length };
 }
 
 export async function updateBadge(count: number): Promise<void> {

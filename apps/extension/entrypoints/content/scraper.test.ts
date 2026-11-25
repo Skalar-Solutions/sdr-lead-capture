@@ -1,7 +1,7 @@
-import { Window } from "happy-dom";
+﻿import { Window } from "happy-dom";
 import { describe, expect, it } from "vitest";
 
-import { analyzeWebsiteUrl, extractBusinessData, getNameFromUrl } from "./scraper";
+import { analyzeWebsiteUrl, cleanText, extractBusinessData, getNameFromUrl } from "./scraper";
 
 function parse(html: string): Document {
   const window = new Window();
@@ -96,5 +96,12 @@ describe("getNameFromUrl", () => {
 
   it("mengabaikan URL yang bukan halaman tempat", () => {
     expect(getNameFromUrl("https://www.google.com/maps/search/steak")).toBe("");
+  });
+});
+
+describe("cleanText", () => {
+  it("buang ikon font Google Maps (private use area)", () => {
+    expect(cleanText("\uE0C8RT.11/RW.1, Pondok Labu")).toBe("RT.11/RW.1, Pondok Labu");
+    expect(cleanText(" \uE0B0 0897-7308-870 ")).toBe("0897-7308-870");
   });
 });

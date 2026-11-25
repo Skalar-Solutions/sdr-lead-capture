@@ -52,7 +52,12 @@ export interface WebsiteAnalysis {
 }
 
 export function cleanText(text: string | null | undefined): string {
-  return (text ?? "").trim().replace(/\s+/g, " ");
+  // Google Maps menyisipkan ikon font (Unicode Private Use Area, mis. U+E0C8)
+  // di depan alamat/telepon. Buang supaya tidak ikut ke tampilan & CSV.
+  return (text ?? "")
+    .replace(/[\uE000-\uF8FF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function analyzeWebsiteUrl(url: string): WebsiteAnalysis {
