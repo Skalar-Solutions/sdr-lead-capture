@@ -21,13 +21,17 @@ import {
   TableHeader,
   TableRow,
 } from "@sdr/ui/components/ui/table";
-import { Download, ExternalLink, Flame, RefreshCw, Search, Trash2 } from "lucide-react";
+import { Download, ExternalLink, Flame, RefreshCw, Search, Star, Trash2 } from "lucide-react";
 import { useDeferredValue, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { browser } from "wxt/browser";
 
 import { hasRealWebsite, type Capture } from "@/lib/capture";
-import { buildCsvFilename, capturesToCsv } from "@/lib/csv-template";
+import {
+  buildCsvFilename,
+  capturesToCsv,
+  capturesToDetailedCsv,
+} from "@/lib/csv-template";
 import { downloadCsvFile } from "@/lib/download";
 import { readCaptures, writeCaptures } from "@/lib/store";
 
@@ -45,9 +49,17 @@ function formatDate(value: string): string {
 
 function matchesQuery(capture: Capture, query: string): boolean {
   if (!query) return true;
-  return [capture.companyName, capture.category, capture.address, capture.phone]
+  return [
+    capture.companyName,
+    capture.category,
+    capture.address,
+    capture.phone,
+    capture.websiteStatus,
+    capture.picName,
+    capture.notes,
+  ]
     .filter(Boolean)
-    .some((value) => value.toLowerCase().includes(query));
+    .some((value) => value?.toLowerCase().includes(query));
 }
 
 export default function DashboardApp() {
@@ -95,13 +107,22 @@ export default function DashboardApp() {
     socialOnly: captures.filter((capture) => capture.socialType !== null).length,
   };
 
-  function handleExport() {
+  function handleExportCrm() {
     if (filtered.length === 0) {
       toast.error("Belum ada data untuk diekspor");
       return;
     }
-    downloadCsvFile(capturesToCsv(filtered), buildCsvFilename());
-    toast.success(`${filtered.length} baris CSV diunduh`);
+    downloadCsvFile(capturesToCsv(filtered), buildCsvFilename("crm"));
+    toast.success(`${filtered.length} baris diekspor (Format CRM.ID 13 Kolom)`);
+  }
+
+  function handleExportDetailed() {
+    if (filtered.length === 0) {
+      toast.error("Belum ada data untuk diekspor");
+      return;
+    }
+    downloadCsvFile(capturesToDetailedCsv(filtered), buildCsvFilename("detailed"));
+    toast.success(`${filtered.length} baris diekspor (Format Lengkap SDR & Tag)`);
   }
 
   async function handleDelete() {
@@ -125,12 +146,12 @@ export default function DashboardApp() {
       <div className="mx-auto max-w-7xl space-y-4 p-6">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Hasil Scrape</h1>
+            <h1 className="text-xl font-bold tracking-tight">SDR Lead Staging & Hasil Scrape</h1>
             <p className="text-sm text-muted-foreground">
-              Tersimpan lokal di browser ini. Download CSV kalau sudah selesai.
+              Tersimpan lokal di browser ini. Siap diekspor ke CRM.ID atau Excel.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -151,18 +172,23 @@ export default function DashboardApp() {
               <Trash2 className="size-4" />
               Hapus semua
             </Button>
-            <Button size="sm" onClick={handleExport}>
+            <Button variant="outline" size="sm" onClick={handleExportCrm}>
               <Download className="size-4" />
-              Download CSV
+              CSV Format CRM.ID
+            </Button>
+            <Button size="sm" onClick={handleExportDetailed}>
+              <Download className="size-4" />
+              CSV Lengkap (Tag & Gap)
             </Button>
           </div>
         </header>
 
+        {/* Stats Row */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="py-4">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Total baris
+                Total Baris
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4">
@@ -171,7 +197,7 @@ export default function DashboardApp() {
           </Card>
           <Card className="py-4">
             <CardHeader className="px-4 pb-1">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Hari ini</CardTitle>
+              <CardTitle className="text-xs font-medium text-muted-foreground">Hari Ini</CardTitle>
             </CardHeader>
             <CardContent className="px-4">
               <p className="text-2xl font-bold">{stats.today}</p>
@@ -180,7 +206,7 @@ export default function DashboardApp() {
           <Card className="py-4">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Tanpa website
+                Tanpa Website (HOT)
               </CardTitle>
             </CardHeader>
             <CardContent className="flex items-center gap-2 px-4">
@@ -191,7 +217,7 @@ export default function DashboardApp() {
           <Card className="py-4">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Sosmed only
+                Sosmed Only
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4">
@@ -200,6 +226,7 @@ export default function DashboardApp() {
           </Card>
         </div>
 
+        {/* Search Bar */}
         <Card className="gap-3 py-3">
           <CardContent className="flex flex-wrap items-center gap-2 px-4">
             <div className="relative min-w-[240px] flex-1">
@@ -207,7 +234,7 @@ export default function DashboardApp() {
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Cari nama, kategori, alamat, telepon..."
+                placeholder="Cari nama bisnis, kategori, telepon, PIC, catatan..."
                 className="pl-8"
               />
             </div>
@@ -215,23 +242,26 @@ export default function DashboardApp() {
           </CardContent>
         </Card>
 
+        {/* Table */}
         <Card className="overflow-hidden py-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[120px]">Waktu</TableHead>
+                <TableHead className="w-[110px]">Waktu</TableHead>
                 <TableHead>Bisnis</TableHead>
-                <TableHead>Kontak</TableHead>
-                <TableHead className="w-[220px]">Website / Sosmed</TableHead>
-                <TableHead className="w-[110px]">Rating</TableHead>
-                <TableHead className="w-[60px]" />
+                <TableHead>Status & Gaps</TableHead>
+                <TableHead>Solusi</TableHead>
+                <TableHead>Kontak & Alamat</TableHead>
+                <TableHead className="w-[180px]">Website / Sosmed</TableHead>
+                <TableHead className="w-[180px]">PIC & Catatan</TableHead>
+                <TableHead className="w-[50px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading
                 ? Array.from({ length: 4 }).map((_, index) => (
                     <TableRow key={`skeleton-${index}`}>
-                      <TableCell colSpan={6}>
+                      <TableCell colSpan={8}>
                         <Skeleton className="h-8 w-full" />
                       </TableCell>
                     </TableRow>
@@ -240,7 +270,7 @@ export default function DashboardApp() {
 
               {!loading && pageItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
                     Belum ada data. Buka Google Maps, klik satu tempat, lalu capture.
                   </TableCell>
                 </TableRow>
@@ -255,16 +285,57 @@ export default function DashboardApp() {
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">{capture.companyName || "(tanpa nama)"}</span>
                       {!hasRealWebsite(capture) ? (
-                        <Badge variant="destructive" className="gap-1">
+                        <Badge variant="destructive" className="gap-1 text-[10px] py-0">
                           <Flame className="size-3" /> HOT
                         </Badge>
                       ) : null}
                     </div>
                     <div className="text-xs text-muted-foreground">{capture.category || "—"}</div>
+                    {capture.rating ? (
+                      <div className="text-[11px] text-amber-600 font-medium mt-0.5">
+                        ⭐ {capture.rating} {capture.reviewsCount ? `(${capture.reviewsCount})` : ""}
+                      </div>
+                    ) : null}
                   </TableCell>
                   <TableCell className="align-top text-xs">
-                    <div className="font-medium">{capture.phone || "—"}</div>
-                    <div className="mt-1 max-w-[260px] truncate text-muted-foreground">
+                    <div className="font-semibold text-primary capitalize mb-1">
+                      {capture.websiteStatus || "—"}
+                    </div>
+                    <div className="flex flex-wrap gap-1 max-w-[180px]">
+                      {(capture.digitalGaps || []).map((gap) => (
+                        <span
+                          key={gap}
+                          className="rounded-md bg-destructive/10 text-destructive px-1.5 py-0.5 text-[9px] font-medium"
+                        >
+                          {gap.replace(/_/g, " ")}
+                        </span>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell className="align-top text-xs">
+                    <div className="flex flex-wrap gap-1 max-w-[150px]">
+                      {(capture.services || []).map((srv) => (
+                        <span
+                          key={srv}
+                          className="rounded-md bg-primary/10 text-primary px-1.5 py-0.5 text-[9px] font-medium"
+                        >
+                          {srv.replace(/_/g, " ")}
+                        </span>
+                      ))}
+                    </div>
+                    {capture.priority ? (
+                      <div className="flex items-center gap-0.5 mt-1 text-amber-500 text-[10px]">
+                        <Star className="size-3 fill-amber-400" />
+                        <span>P{capture.priority}</span>
+                      </div>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="align-top text-xs">
+                    <div className="font-semibold">{capture.phone || "—"}</div>
+                    {capture.whatsapp && capture.whatsapp !== capture.phone ? (
+                      <div className="text-muted-foreground text-[10px]">WA: {capture.whatsapp}</div>
+                    ) : null}
+                    <div className="mt-1 max-w-[200px] truncate text-muted-foreground text-[11px]">
                       {capture.address || "—"}
                     </div>
                   </TableCell>
@@ -286,23 +357,31 @@ export default function DashboardApp() {
                           href={capture.socialUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="block break-all text-primary underline-offset-2 hover:underline"
+                          className="block break-all text-primary underline-offset-2 hover:underline text-[11px]"
                         >
                           {capture.socialUrl}
                         </a>
                       </div>
                     ) : (
-                      <span className="text-muted-foreground">Tidak ada</span>
+                      <span className="text-muted-foreground text-xs">Tidak ada</span>
                     )}
                     {capture.instagram ? (
-                      <div className="mt-1 text-muted-foreground">{capture.instagram}</div>
+                      <div className="mt-1 text-muted-foreground text-[11px]">{capture.instagram}</div>
                     ) : null}
                   </TableCell>
                   <TableCell className="align-top text-xs">
-                    {capture.rating || "—"}
-                    {capture.reviewsCount ? (
-                      <div className="text-muted-foreground">({capture.reviewsCount})</div>
+                    {capture.picName ? (
+                      <div className="font-medium">
+                        {capture.picName} {capture.picRole ? `(${capture.picRole})` : ""}
+                      </div>
                     ) : null}
+                    {capture.notes ? (
+                      <div className="text-muted-foreground text-[11px] italic mt-0.5 max-w-[180px] line-clamp-2">
+                        "{capture.notes}"
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-[11px]">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="align-top">
                     <Button
@@ -320,6 +399,7 @@ export default function DashboardApp() {
           </Table>
         </Card>
 
+        {/* Pagination */}
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
             Halaman {safePage + 1} dari {pageCount}
@@ -345,6 +425,7 @@ export default function DashboardApp() {
         </div>
       </div>
 
+      {/* Delete Confirmation Alert */}
       <AlertDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
@@ -363,6 +444,7 @@ export default function DashboardApp() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Clear All Confirmation Alert */}
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

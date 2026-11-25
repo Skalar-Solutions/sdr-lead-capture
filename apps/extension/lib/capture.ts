@@ -1,5 +1,7 @@
 import type { ScrapedPlace } from "@/entrypoints/content/scraper";
 
+export type WebsiteStatus = "none" | "outdated" | "bad-ux" | "decent";
+
 export interface Capture {
   id: string;
   capturedAt: string;
@@ -15,9 +17,26 @@ export interface Capture {
   reviewsCount: string;
   mapsUrl: string;
   isSocialMediaOnly: boolean;
+
+  // SDR Evaluation & Tagging
+  websiteStatus: WebsiteStatus;
+  digitalGaps: string[];
+  services: string[];
+  priority: number;
+  picName?: string;
+  picRole?: string;
+  notes?: string;
+  whatsapp?: string;
 }
 
 export function toCapture(place: ScrapedPlace): Capture {
+  const hasWebsite = place.isRealWebsite && place.website.trim() !== "";
+  const websiteStatus: WebsiteStatus = hasWebsite ? "decent" : "none";
+  
+  const initialGaps: string[] = [];
+  if (!hasWebsite) initialGaps.push("no_website");
+  if (place.isSocialMediaOnly) initialGaps.push("social_media_only");
+
   return {
     id: crypto.randomUUID(),
     capturedAt: new Date().toISOString(),
@@ -33,9 +52,25 @@ export function toCapture(place: ScrapedPlace): Capture {
     reviewsCount: place.reviewsCount,
     mapsUrl: place.mapsUrl,
     isSocialMediaOnly: place.isSocialMediaOnly,
+
+    // SDR Evaluation defaults
+    websiteStatus,
+    digitalGaps: initialGaps,
+    services: ["website_dev"],
+    priority: hasWebsite ? 3 : 5,
+    picName: "",
+    picRole: "",
+    notes: place.isSocialMediaOnly
+      ? `Hanya ada link ${place.socialType}: ${place.socialUrl}`
+      : "",
+    whatsapp: place.phone,
   };
 }
 
 export function hasRealWebsite(capture: Capture): boolean {
-  return capture.website.trim() !== "";
+  return (
+    capture.website.trim() !== "" &&
+    !capture.isSocialMediaOnly &&
+    capture.websiteStatus !== "none"
+  );
 }

@@ -75,15 +75,14 @@ export default function App() {
     };
   }, []);
 
-  async function handleSave() {
-    if (!capture) return;
+  async function handleSave(updatedCapture: Capture) {
     setSaving(true);
     try {
-      const count = await addCapture(capture);
+      const count = await addCapture(updatedCapture);
       setSavedCount(count);
       setSaved(true);
-      toast.success("Masuk CSV", {
-        description: `${capture.companyName}${capture.website ? "" : " · tidak punya website"}`,
+      toast.success("Tersimpan ke CSV", {
+        description: `${updatedCapture.companyName}${updatedCapture.website ? "" : " · 🔥 Hot lead"}`,
       });
     } catch (error) {
       toast.error("Gagal menyimpan", {
@@ -100,67 +99,58 @@ export default function App() {
       toast.error("Belum ada data untuk diekspor");
       return;
     }
-    downloadCsvFile(capturesToCsv(captures), buildCsvFilename());
+    downloadCsvFile(capturesToCsv(captures), buildCsvFilename("crm"));
     toast.success(`${captures.length} baris CSV diunduh`);
   }
 
-  if (!ready) {
-    return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-        Memuat...
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col">
-      <div className="flex items-start gap-2 px-3 pt-3">
-        <Alert
-          variant={source.tone === "warn" ? "destructive" : "default"}
-          className="w-auto flex-1 py-2"
+    <div className="w-[380px] p-3 text-xs space-y-2">
+      <div className="flex items-center justify-between">
+        <h1 className="text-sm font-bold flex items-center gap-1.5">
+          <MapPin className="size-4 text-primary" /> SDR Lead Capture
+        </h1>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs"
+          onClick={() => void openDashboard()}
         >
-          <AlertTitle className="text-xs">
-            {source.tone === "warn" ? "Perhatian" : "Sumber"}
-          </AlertTitle>
-          <AlertDescription className="text-xs">{source.text}</AlertDescription>
-        </Alert>
-        <Button type="button" size="sm" variant="outline" onClick={() => void openDashboard()}>
-          <ClipboardList className="size-4" />
-          Data
+          <ClipboardList className="size-3.5 mr-1" /> Data ({savedCount})
         </Button>
       </div>
 
-      <div className="p-3">
-        {capture ? (
-          <CaptureCard capture={capture} saving={saving} saved={saved} onSave={handleSave} />
-        ) : (
-          <Card className="gap-0 py-0">
-            <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
-              <MapPin className="size-6 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Buka Google Maps dan klik satu tempat untuk mulai capture.
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  void browser.tabs.create({ url: "https://www.google.com/maps" })
-                }
-              >
-                Buka Google Maps
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      <Alert variant={source.tone === "warn" ? "destructive" : "default"} className="py-2">
+        <AlertTitle className="text-xs">
+          {source.tone === "warn" ? "Perhatian" : "Status"}
+        </AlertTitle>
+        <AlertDescription className="text-xs">{source.text}</AlertDescription>
+      </Alert>
 
-      <div className="flex items-center justify-between gap-2 border-t px-3 py-2">
-        <span className="text-xs text-muted-foreground">{savedCount} baris tersimpan</span>
-        <Button size="sm" variant="outline" onClick={handleDownload} disabled={savedCount === 0}>
-          <Download className="size-4" />
-          Download CSV
+      {capture ? (
+        <CaptureCard
+          capture={capture}
+          saving={saving}
+          saved={saved}
+          onSave={handleSave}
+        />
+      ) : (
+        <Card className="p-4 text-center text-muted-foreground">
+          <CardContent className="p-0 text-xs">
+            {ready ? "Buka Google Maps dan klik tempat bisnis." : "Memeriksa Google Maps..."}
+          </CardContent>
+        </Card>
+      )}
+
+      {savedCount > 0 ? (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="w-full text-xs"
+          onClick={() => void handleDownload()}
+        >
+          <Download className="size-3.5 mr-1" /> Download CSV ({savedCount} baris)
         </Button>
-      </div>
+      ) : null}
     </div>
   );
 }

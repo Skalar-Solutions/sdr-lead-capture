@@ -9,38 +9,56 @@ export interface CsvColumn {
 
 /**
  * ============================================================================
- * TEMPLATE CSV — mengikuti `crm-contact-template.xlsx` (13 kolom)
- * ----------------------------------------------------------------------------
- * Urutan dan nama header harus sama persis dengan template import CRM.
- *
- * Nilai default yang bisa diubah:
- *   DEFAULT_CONTACT_TYPE  -> kolom "*Tipe Kontak" (contoh: Vendor/Pegawai)
- *   DEFAULT_COUNTRY       -> kolom "Negara"
- *   DEFAULT_GROUP         -> fallback "Grup Kontak" kalau kategori kosong
- *
- * Data scrape yang TIDAK ada kolomnya di template (website, sosmed, rating,
- * link Maps) sengaja tidak diekspor. Kalau CRM kamu menerima kolom tambahan,
- * tinggal tambahkan di akhir array ini.
+ * TEMPLATE CSV 1: CRM Format (mengikuti `crm-contact-template.xlsx` - 13 kolom)
  * ============================================================================
  */
 const DEFAULT_CONTACT_TYPE = "Vendor";
 const DEFAULT_COUNTRY = "Indonesia";
 const DEFAULT_GROUP = "Google Maps";
 
-export const CSV_COLUMNS: CsvColumn[] = [
-  { header: "*Nama", value: (capture) => capture.companyName },
+export const CRM_COLUMNS: CsvColumn[] = [
+  { header: "*Nama", value: (c) => c.companyName },
   { header: "Sapaan", value: () => "" },
   { header: "URL Foto", value: () => "" },
   { header: "*Tipe Kontak", value: () => DEFAULT_CONTACT_TYPE },
-  { header: "Grup Kontak", value: (capture) => capture.category || DEFAULT_GROUP },
-  { header: "Perusahaan", value: (capture) => capture.companyName },
-  { header: "Alamat Penagihan", value: (capture) => capture.address },
+  { header: "Grup Kontak", value: (c) => c.category || DEFAULT_GROUP },
+  { header: "Perusahaan", value: (c) => c.companyName },
+  { header: "Alamat Penagihan", value: (c) => c.address },
   { header: "Negara", value: () => DEFAULT_COUNTRY },
   { header: "Provinsi", value: () => "" },
   { header: "Kota", value: () => "" },
   { header: "Email", value: () => "" },
-  { header: "Nomor Telepon", value: (capture) => capture.phone },
+  { header: "Nomor Telepon", value: (c) => c.phone },
   { header: "Tanggal Lahir (dd/mm/yyyy)", value: () => "" },
+];
+
+/**
+ * ============================================================================
+ * TEMPLATE CSV 2: SDR Detailed Format (Semua data + Tag & Evaluasi Lengkap)
+ * ============================================================================
+ */
+export const SDR_DETAILED_COLUMNS: CsvColumn[] = [
+  { header: "ID", value: (c) => c.id },
+  { header: "Waktu Capture", value: (c) => c.capturedAt },
+  { header: "Nama Perusahaan", value: (c) => c.companyName },
+  { header: "Kategori", value: (c) => c.category },
+  { header: "Alamat", value: (c) => c.address },
+  { header: "Nomor Telepon", value: (c) => c.phone },
+  { header: "WhatsApp", value: (c) => c.whatsapp || c.phone },
+  { header: "Website", value: (c) => c.website },
+  { header: "Sosmed / Linktree", value: (c) => c.socialUrl || "" },
+  { header: "Instagram", value: (c) => c.instagram },
+  { header: "Google Rating", value: (c) => c.rating },
+  { header: "Jumlah Ulasan", value: (c) => c.reviewsCount },
+  { header: "Status Website", value: (c) => c.websiteStatus },
+  { header: "HOT Lead", value: (c) => (c.websiteStatus === "none" ? "YA" : "TIDAK") },
+  { header: "Celah Digital (Gaps)", value: (c) => (c.digitalGaps || []).join("; ") },
+  { header: "Peluang Solusi", value: (c) => (c.services || []).join("; ") },
+  { header: "Prioritas (1-5)", value: (c) => String(c.priority || 3) },
+  { header: "PIC Nama", value: (c) => c.picName || "" },
+  { header: "PIC Jabatan", value: (c) => c.picRole || "" },
+  { header: "Catatan Sales", value: (c) => c.notes || "" },
+  { header: "Link Google Maps", value: (c) => c.mapsUrl },
 ];
 
 export function capturesToCsv(
@@ -48,15 +66,26 @@ export function capturesToCsv(
   options: { bom?: boolean } = {},
 ): string {
   const { bom = true } = options;
-
-  const header = CSV_COLUMNS.map((column) => escapeCsvCell(column.header)).join(",");
-  const rows = captures.map((capture) =>
-    CSV_COLUMNS.map((column) => escapeCsvCell(column.value(capture))).join(","),
+  const header = CRM_COLUMNS.map((col) => escapeCsvCell(col.header)).join(",");
+  const rows = captures.map((c) =>
+    CRM_COLUMNS.map((col) => escapeCsvCell(col.value(c))).join(","),
   );
-
   return `${bom ? "\uFEFF" : ""}${[header, ...rows].join("\r\n")}`;
 }
 
-export function buildCsvFilename(): string {
-  return `crm-contact-${new Date().toISOString().slice(0, 10)}.csv`;
+export function capturesToDetailedCsv(
+  captures: readonly Capture[],
+  options: { bom?: boolean } = {},
+): string {
+  const { bom = true } = options;
+  const header = SDR_DETAILED_COLUMNS.map((col) => escapeCsvCell(col.header)).join(",");
+  const rows = captures.map((c) =>
+    SDR_DETAILED_COLUMNS.map((col) => escapeCsvCell(col.value(c))).join(","),
+  );
+  return `${bom ? "\uFEFF" : ""}${[header, ...rows].join("\r\n")}`;
+}
+
+export function buildCsvFilename(format: "crm" | "detailed" = "crm"): string {
+  const dateStr = new Date().toISOString().slice(0, 10);
+  return format === "crm" ? `crm-contact-${dateStr}.csv` : `sdr-leads-lengkap-${dateStr}.csv`;
 }
