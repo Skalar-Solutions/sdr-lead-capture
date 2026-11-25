@@ -1,122 +1,172 @@
 # SDR Lead Capture
 
-Extension capture lead dari Google Maps + API Cloudflare + dashboard staging.
-POC lama ada di `legacy/` (read-only).
+Alat bantu kecil untuk **mengambil data bisnis dari Google Maps dan menyimpannya
+sebagai file CSV** yang siap diimpor ke CRM.
 
-## Status
+Cocok untuk sales yang sedang mengumpulkan daftar calon pelanggan: buka Google
+Maps, klik satu bisnis, simpan, ulangi. Di akhir, download CSV-nya.
 
-| Bagian | Status |
+Tidak perlu akun. Tidak perlu internet tambahan. **Data tidak dikirim ke mana
+pun** — semuanya tersimpan di Chrome di komputer kamu.
+
+---
+
+## Yang kamu dapat
+
+Satu file CSV dengan 13 kolom, persis seperti template CRM:
+
+`*Nama`, `Sapaan`, `URL Foto`, `*Tipe Kontak`, `Grup Kontak`, `Perusahaan`,
+`Alamat Penagihan`, `Negara`, `Provinsi`, `Kota`, `Email`, `Nomor Telepon`,
+`Tanggal Lahir (dd/mm/yyyy)`
+
+Yang otomatis terisi dari Google Maps:
+
+- Nama bisnis
+- Kategori (mis. Steakhouse, Klinik, Salon)
+- Alamat lengkap
+- Nomor telepon
+- Negara: Indonesia
+- Tipe kontak: Vendor
+
+Sisanya dibiarkan kosong karena memang tidak ada di Google Maps.
+
+---
+
+## Cara memasang
+
+> Kalau extension sudah dipasang di Chrome kamu, lewati bagian ini.
+
+Saat ini extension dipasang manual (belum di Chrome Web Store).
+
+1. Minta file **`sdr-lead-capture-csv-1.0.1-chrome.zip`** ke yang mengirim ini.
+2. **Extract** file zip itu ke folder yang gampang diingat, misalnya
+   `Dokumen/SDR Lead Capture`.
+   Penting: jangan hapus folder ini setelah dipasang.
+3. Buka Chrome, ketik di address bar: `chrome://extensions`
+4. Nyalakan tombol **Developer mode** di kanan atas.
+5. Klik **Load unpacked**.
+6. Pilih folder hasil extract tadi (folder yang ada file `manifest.json`-nya).
+7. Extension akan muncul. Klik ikon puzzle 🧩 di kanan atas Chrome, lalu klik
+   **pin** di samping "SDR Lead Capture" supaya ikonnya nempel di toolbar.
+
+Kalau nanti extension sudah ada di Chrome Web Store, cara pasangnya cukup klik
+**Add to Chrome**.
+
+---
+
+## Cara pakai
+
+1. Buka **Google Maps** (`google.com/maps`).
+2. Cari bisnis, misalnya `steakhouse jakarta`.
+3. **Klik satu tempat** sampai panel detailnya terbuka di sebelah kiri.
+   (Kalau cuma di-hover, data belum terbaca.)
+4. Klik ikon **SDR Lead Capture** di toolbar — atau klik tombol bulat
+   **SDR Capture** di kanan bawah halaman Maps.
+5. Akan muncul ringkasan data bisnis tersebut. Periksa sebentar.
+6. Klik **Simpan ke CSV**.
+7. Ulangi untuk bisnis berikutnya.
+8. Kalau sudah selesai, klik **Download CSV**.
+
+File CSV akan masuk ke folder **Downloads** komputer kamu.
+
+---
+
+## Membuka CSV
+
+- **Excel**: klik dua kali file CSV-nya.
+- **Google Sheets**: buka sheets.google.com → File → Import → upload CSV.
+- **Langsung ke CRM**: gunakan fitur import kontak di CRM, pilih file CSV ini.
+  Kolomnya sudah disamakan dengan template CRM, jadi tinggal cocokkan.
+
+Kalau di Excel angka **0 di depan nomor telepon hilang**, itu perilaku Excel,
+bukan datanya. CRM biasanya membaca CSV dengan benar. Kalau perlu, format kolom
+telepon sebagai "Text" sebelum membuka.
+
+---
+
+## Arti kolom
+
+| Kolom | Isinya |
 |---|---|
-| `packages/core` | ✅ schema `Lead`, telepon E.164, dedupe, scoring, CSV — 40 tes |
-| `packages/ui` | ✅ 25 komponen shadcn/ui + portal container untuk Shadow DOM |
-| `apps/extension` | ✅ WXT + React: popup, **drawer in-page**, outbox, sync otomatis — 9 tes |
-| `apps/api` | ✅ Hono + D1: CRUD, sync batch, idempotency, dedupe, CSV, auth — 4 tes |
-| `apps/web` | ✅ Dashboard React: stats, tabel, filter, hapus, export CSV |
+| `*Nama` | Nama bisnis |
+| `Sapaan` | Kosong |
+| `URL Foto` | Kosong |
+| `*Tipe Kontak` | Otomatis "Vendor" |
+| `Grup Kontak` | Kategori bisnis dari Maps |
+| `Perusahaan` | Nama bisnis |
+| `Alamat Penagihan` | Alamat lengkap |
+| `Negara` | Indonesia |
+| `Provinsi` | Kosong — isi manual kalau perlu |
+| `Kota` | Kosong — isi manual kalau perlu |
+| `Email` | Kosong — Google Maps jarang mencantumkan email |
+| `Nomor Telepon` | Nomor dari Google Maps |
+| `Tanggal Lahir (dd/mm/yyyy)` | Kosong |
 
-Total **53 tes**, semua typecheck bersih, semua build lolos.
+Kolom bertanda `*` wajib untuk CRM. Dua-duanya sudah terisi otomatis.
 
-## Menjalankan lokal
+---
 
-Butuh Node 20+ dan pnpm.
+## Melihat dan mengelola data
 
-```bash
-pnpm install
+Klik tombol **Data** di popup, atau ikon clipboard di kotak capture di Maps.
 
-# 1) API (terminal 1)
-cp apps/api/.dev.vars.example apps/api/.dev.vars
-pnpm --filter @sdr/api db:migrate      # bikin tabel di D1 lokal
-pnpm --filter @sdr/api dev             # http://127.0.0.1:8787
+Di halaman itu kamu bisa:
 
-# 2) Dashboard (terminal 2)
-pnpm --filter @sdr/web dev             # http://localhost:5173
+- melihat semua baris yang sudah disimpan
+- mencari berdasarkan nama, alamat, atau telepon
+- menghapus satu baris
+- menghapus semua data
+- download CSV
 
-# 3) Extension (terminal 3)
-pnpm dev
-```
+Data ini tersimpan di Chrome. Kalau extension di-uninstall, datanya ikut hilang.
+**Download CSV dulu sebelum uninstall.**
 
-Load extension: `chrome://extensions` → Developer mode → **Load unpacked** → `apps/extension/.output/chrome-mv3-dev`.
+---
 
-Token development default: `dev-token` (ada di `.dev.vars`, pengaturan extension, dan dashboard).
+## Kalau ada masalah
 
-### Alur
+| Masalah | Solusi |
+|---|---|
+| Tombol SDR Capture tidak muncul | Pastikan sedang di `google.com/maps`, lalu refresh halaman (F5) |
+| Data yang muncul kosong | Klik dulu salah satu tempat sampai panel detail terbuka, lalu klik tombol refresh ↻ di kotak capture |
+| Tombol "Simpan ke CSV" tidak bereaksi | Tutup popup, buka lagi, coba simpan sekali lagi |
+| CSV kosong | Pastikan sudah klik "Simpan ke CSV", bukan cuma melihat ringkasan |
+| Extension hilang setelah update Chrome | Buka `chrome://extensions` → Load unpacked → pilih folder extension lagi |
+| Data lama hilang | Kemungkinan extension di-uninstall atau profil Chrome dihapus. Data memang hanya tersimpan lokal |
 
-1. Buka Google Maps, klik satu tempat.
-2. Klik ikon extension **atau** pill `SDR Capture` di kanan bawah.
-3. Data terisi otomatis → **Simpan ke outbox**.
-4. Outbox dikirim ke API tiap 1 menit, saat klik tombol sync, atau saat browser mulai.
-5. Dashboard menampilkan lead yang sudah masuk.
+---
 
-## Perintah
+## Privasi
 
-```bash
-pnpm test                       # semua paket
-pnpm typecheck                  # semua paket
-pnpm --filter @sdr/extension build
-pnpm --filter @sdr/extension zip
-pnpm --filter @sdr/web build
-pnpm --filter @sdr/api exec wrangler deploy --dry-run --outdir dist
-```
+- Tidak ada akun, tidak ada login.
+- Tidak ada data yang dikirim ke server.
+- Extension hanya membaca halaman Google Maps yang sedang kamu buka.
+- Semua hasil scrape disimpan di Chrome di komputer kamu sendiri.
 
-## API
+---
 
-Base: `http://127.0.0.1:8787`
+## Pertanyaan yang sering muncul
 
-| Method | Path | Auth | Fungsi |
-|---|---|---|---|
-| GET | `/health` | – | health check |
-| GET | `/v1/me` | ✅ | user + org + stats hari ini |
-| POST | `/v1/leads` | ✅ | create, `Idempotency-Key` |
-| GET | `/v1/leads` | ✅ | list, filter `status`, `q`, `limit`, `offset` |
-| GET | `/v1/leads/:id` | ✅ | detail |
-| PATCH | `/v1/leads/:id` | ✅ | update, optimistic concurrency |
-| DELETE | `/v1/leads/:id` | ✅ | soft delete |
-| GET | `/v1/leads/export.csv` | ✅ | export CSV |
-| POST | `/v1/sync` | ✅ | batch dari outbox (maks 200) |
-| GET | `/v1/stats/today` | ✅ | counter harian |
+**Bisa ambil banyak bisnis sekaligus otomatis?**
+Belum. Saat ini satu per satu. Ini juga lebih aman terhadap aturan Google Maps.
 
-Auth: `Authorization: Bearer <token>`. Token bisa `DEV_AUTH_TOKEN` (dev) atau **Google ID token** (diverifikasi via JWKS, tanpa SDK).
+**Bisa dipakai di HP?**
+Belum. Hanya di Chrome desktop (Windows/Mac/Linux).
 
-## Deploy
+**Bisa di Edge atau Brave?**
+Bisa. Caranya sama, buka halaman extension di browser tersebut.
 
-1. Ganti `database_id` di `apps/api/wrangler.jsonc` dengan ID D1 staging/produksi.
-2. Set secret:
-   ```bash
-   cd apps/api
-   pnpm exec wrangler secret put DEV_AUTH_TOKEN --env staging
-   pnpm exec wrangler secret put GOOGLE_CLIENT_ID --env staging
-   ```
-3. Migrasi remote:
-   ```bash
-   pnpm exec wrangler d1 migrations apply sdr-leads-staging --remote --env staging
-   ```
-4. Deploy:
-   ```bash
-   pnpm exec wrangler deploy --env staging
-   pnpm --filter @sdr/web exec wrangler deploy
-   ```
-5. Pasang custom domain: `api-staging.` untuk Worker API, `app-staging.` untuk dashboard.
-6. Lindungi dashboard dengan **Cloudflare Access** (Google IdP). Jangan taruh API di belakang Access — extension memakai Bearer token.
+**Datanya bisa dipakai di komputer lain?**
+Bisa, lewat download CSV. Data tidak otomatis pindah sendiri.
 
-Di produksi, isi `ALLOWED_ORIGINS` dengan origin dashboard (`https://app.domain.com`).
+**Kalau salah simpan?**
+Buka halaman **Data**, hapus barisnya, lalu capture ulang.
 
-## Aturan UI
+---
 
-Semua komponen wajib dari `@sdr/ui` (shadcn). Menambah komponen:
+## Untuk yang paham teknis
 
-```bash
-pnpm dlx shadcn@latest add <nama> -c packages/ui -y
-grep -rl 'from "cn"' packages/ui/src/components/ui \
-  | xargs perl -pi -e 's{from "cn"}{from "../../lib/utils"}g'
-pnpm --filter @sdr/ui typecheck
-```
-
-Kalau komponen baru memakai portal dan perlu dipakai di drawer, tambahkan
-`container={usePortalContainer() ?? undefined}` seperti di `select.tsx` dan `tooltip.tsx`.
-
-## Yang belum (sadar, bukan bug)
-
-1. **Login Google di extension belum disambung.** Masih pakai token statis di Pengaturan. Server sudah siap verifikasi Google ID token; tinggal panggil `chrome.identity.getAuthToken` setelah OAuth client ID didaftarkan.
-2. **Dashboard produksi masih butuh token manual.** Access melindungi halaman, tapi panggilan ke `api.` tetap pakai Bearer. Nanti diganti Google ID token/OAuth.
-3. **Icon masih placeholder** (lingkaran biru dari POC).
-4. **Belum ada `.crx` + update XML** untuk force-install enterprise, dan belum ada privacy policy.
-5. Bundle popup ~697 KB dan content script ~663 KB (belum di-code-split).
+- Kode ada di `apps/extension` (WXT + React).
+- Kolom CSV diatur di `apps/extension/lib/csv-template.ts`.
+- Build: `pnpm install && pnpm build && pnpm zip`.
+- Detail teknis, arsitektur, dan checklist serah terima ada di `HANDOVER.txt`.

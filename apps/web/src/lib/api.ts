@@ -8,9 +8,24 @@ export interface DashboardConfig {
 const CONFIG_KEY = "sdr_dashboard_config";
 
 export const DEFAULT_CONFIG: DashboardConfig = {
-  baseUrl: "http://127.0.0.1:8787",
-  token: "dev-token",
+  baseUrl:
+    (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://127.0.0.1:8787",
+  token: import.meta.env.DEV ? "dev-token" : "",
 };
+
+/**
+ * Bootstrap satu kali lewat `#token=...` supaya dashboard langsung terhubung
+ * tanpa mengetik token. Fragment tidak dikirim ke server dan langsung dibersihkan.
+ */
+export function bootstrapTokenFromHash(): void {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const token = params.get("token");
+  if (!token) return;
+
+  saveConfig({ ...getConfig(), token });
+  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+}
 
 export function getConfig(): DashboardConfig {
   try {

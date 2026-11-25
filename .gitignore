@@ -19,3 +19,7 @@ coverage/
 *.crx
 *.pem
 *.zip
+
+# hasil e2e & artefak rilis
+artifacts/
+release/

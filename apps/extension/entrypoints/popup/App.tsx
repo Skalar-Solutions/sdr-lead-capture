@@ -1,47 +1,35 @@
-import { createLead, type Lead } from "@sdr/core";
 import { Alert, AlertDescription, AlertTitle } from "@sdr/ui/components/ui/alert";
 import { Button } from "@sdr/ui/components/ui/button";
-import { RefreshCw, Settings } from "lucide-react";
+import { Card, CardContent } from "@sdr/ui/components/ui/card";
+import { ClipboardList, Download, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { browser } from "wxt/browser";
 
-import { ApiSettings } from "@/components/api-settings";
-import { LeadForm } from "@/components/lead-form";
-import { DEFAULT_API_CONFIG, ensureHostPermission, getApiConfig, type ApiConfig } from "@/lib/config";
-import type { SyncSummary } from "@/lib/sync";
+import { CaptureCard } from "@/components/capture-card";
 import type { ScrapedPlace } from "@/entrypoints/content/scraper";
-import { emptyLeadForm, toFormValues, type LeadFormValues } from "@/lib/form";
+import { toCapture, type Capture } from "@/lib/capture";
+import { buildCsvFilename, capturesToCsv } from "@/lib/csv-template";
+import { downloadCsvFile } from "@/lib/download";
+import { addCapture, countCaptures, openDashboard, readCaptures } from "@/lib/store";
 
 type SourceStatus = { tone: "info" | "warn"; text: string };
 
-async function readPending(): Promise<number> {
-  const { sdr_outbox } = await browser.storage.local.get("sdr_outbox");
-  return Array.isArray(sdr_outbox) ? sdr_outbox.length : 0;
-}
-
 export default function App() {
-  const [values, setValues] = useState<LeadFormValues>(emptyLeadForm);
-  const [formKey, setFormKey] = useState(0);
-  const [pending, setPending] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [apiConfig, setApiConfig] = useState<ApiConfig>(DEFAULT_API_CONFIG);
+  const [capture, setCapture] = useState<Capture | null>(null);
+  const [savedCount, setSavedCount] = useState(0);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [ready, setReady] = useState(false);
   const [source, setSource] = useState<SourceStatus>({ tone: "info", text: "Memeriksa tab..." });
-
-  useEffect(() => {
-    void getApiConfig().then(setApiConfig);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      const pendingCount = await readPending();
+      const count = await countCaptures();
       if (cancelled) return;
-      setPending(pendingCount);
+      setSavedCount(count);
 
       try {
         const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -49,7 +37,7 @@ export default function App() {
         const isMaps = /google\.(com|co\.id)\/maps/.test(url) || /maps\.google\./.test(url);
 
         if (!isMaps) {
-          setSource({ tone: "warn", text: "Bukan Google Maps. Form tetap bisa diisi manual." });
+          setSource({ tone: "warn", text: "Bukan Google Maps. Buka Maps lalu klik satu tempat." });
           return;
         }
 
@@ -62,19 +50,13 @@ export default function App() {
           | { ok?: boolean; data?: ScrapedPlace; error?: string }
           | undefined;
 
-        if (response?.ok && response.data) {
-          setValues(toFormValues(response.data));
-          setFormKey((key) => key + 1);
-          setSource({
-            tone: "info",
-            text: response.data.companyName
-              ? `Terekstrak: ${response.data.companyName}`
-              : "Data Maps terbaca, tapi nama belum ketemu. Klik salah satu tempat.",
-          });
+        if (response?.ok && response.data?.companyName) {
+          setCapture(toCapture(response.data));
+          setSource({ tone: "info", text: `Terekstrak: ${response.data.companyName}` });
         } else {
           setSource({
             tone: "warn",
-            text: "Belum ada tempat yang kebaca. Klik salah satu hasil di Maps, lalu buka popup lagi.",
+            text: "Belum ada tempat yang kebaca. Klik salah satu hasil di Maps.",
           });
         }
       } catch {
@@ -93,68 +75,33 @@ export default function App() {
     };
   }, []);
 
-  async function persist(formValues: LeadFormValues, target: "staging" | "draft") {
-    setSubmitting(true);
+  async function handleSave() {
+    if (!capture) return;
+    setSaving(true);
     try {
-      const lead = createLead({ ...formValues, status: target }, { orgId: "local" });
-      const { sdr_outbox } = await browser.storage.local.get("sdr_outbox");
-      const outbox = Array.isArray(sdr_outbox) ? (sdr_outbox as Lead[]) : [];
-
-      await browser.storage.local.set({ sdr_outbox: [lead, ...outbox] });
-      setPending(outbox.length + 1);
-
-      toast.success(target === "draft" ? "Draft tersimpan" : "Lead masuk outbox", {
-        description: `${lead.companyName}${lead.isHotLead ? " · 🔥 hot lead" : ""}`,
+      const count = await addCapture(capture);
+      setSavedCount(count);
+      setSaved(true);
+      toast.success("Masuk CSV", {
+        description: `${capture.companyName}${capture.website ? "" : " · tidak punya website"}`,
       });
-
-      setValues(emptyLeadForm);
-      setFormKey((key) => key + 1);
     } catch (error) {
       toast.error("Gagal menyimpan", {
         description: error instanceof Error ? error.message : String(error),
       });
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
   }
 
-  async function handleSync() {
-    // request() harus terjadi di dalam gesture klik → jangan await apa pun sebelumnya.
-    const permission = ensureHostPermission(apiConfig.baseUrl);
-    setSyncing(true);
-    try {
-      const granted = await permission;
-      if (!granted) {
-        toast.error("Izin akses API belum diberikan", {
-          description: "Buka pengaturan, isi URL API, lalu simpan ulang.",
-        });
-        return;
-      }
-
-      const summary = (await browser.runtime.sendMessage({ type: "SDR_SYNC_NOW" })) as
-        | SyncSummary
-        | undefined;
-
-      if (!summary) {
-        toast.error("Tidak ada respons dari background");
-        return;
-      }
-
-      if (summary.error) {
-        toast.error("Sync gagal", { description: summary.error });
-      } else {
-        toast.success("Sync selesai", {
-          description: `${summary.synced} terkirim · ${summary.remaining} tersisa`,
-        });
-      }
-      setPending(summary.remaining);
-    } catch (error) {
-      toast.error("Sync gagal", {
-        description: error instanceof Error ? error.message : String(error),
-      });
-    } finally {
-      setSyncing(false);
+  async function handleDownload() {
+    const captures = await readCaptures();
+    if (captures.length === 0) {
+      toast.error("Belum ada data untuk diekspor");
+      return;
     }
+    downloadCsvFile(capturesToCsv(captures), buildCsvFilename());
+    toast.success(`${captures.length} baris CSV diunduh`);
   }
 
   if (!ready) {
@@ -177,45 +124,43 @@ export default function App() {
           </AlertTitle>
           <AlertDescription className="text-xs">{source.text}</AlertDescription>
         </Alert>
-        <div className="flex gap-1">
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            title="Sync outbox sekarang"
-            disabled={syncing}
-            onClick={handleSync}
-          >
-            <RefreshCw className={syncing ? "size-4 animate-spin" : "size-4"} />
-          </Button>
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            title="Pengaturan API"
-            onClick={() => setSettingsOpen(true)}
-          >
-            <Settings className="size-4" />
-          </Button>
-        </div>
+        <Button type="button" size="sm" variant="outline" onClick={() => void openDashboard()}>
+          <ClipboardList className="size-4" />
+          Data
+        </Button>
       </div>
 
-      <LeadForm
-        key={formKey}
-        defaultValues={values}
-        submitting={submitting}
-        pendingCount={pending}
-        onSubmit={(formValues) => persist(formValues, "staging")}
-        onDraft={(formValues) => persist(formValues, "draft")}
-      />
+      <div className="p-3">
+        {capture ? (
+          <CaptureCard capture={capture} saving={saving} saved={saved} onSave={handleSave} />
+        ) : (
+          <Card className="gap-0 py-0">
+            <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
+              <MapPin className="size-6 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Buka Google Maps dan klik satu tempat untuk mulai capture.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  void browser.tabs.create({ url: "https://www.google.com/maps" })
+                }
+              >
+                Buka Google Maps
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
-      <ApiSettings
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        onSaved={() => {
-          void getApiConfig().then(setApiConfig);
-        }}
-      />
+      <div className="flex items-center justify-between gap-2 border-t px-3 py-2">
+        <span className="text-xs text-muted-foreground">{savedCount} baris tersimpan</span>
+        <Button size="sm" variant="outline" onClick={handleDownload} disabled={savedCount === 0}>
+          <Download className="size-4" />
+          Download CSV
+        </Button>
+      </div>
     </div>
   );
 }
