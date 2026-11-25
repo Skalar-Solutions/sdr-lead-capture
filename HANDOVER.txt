@@ -1,0 +1,170 @@
+================================================================================
+HANDOVER - SDR LEAD CAPTURE (CSV EDITION)
+Tanggal : 25 November 2026
+Versi   : 1.0.1
+Bentuk  : extension Chrome mandiri (tanpa backend)
+Repo    : /Users/bytedance/Vano/Code/sdr-lead-capture (branch: staging)
+================================================================================
+
+RINGKASAN
+---------
+Extension ini scrape data bisnis dari Google Maps, menyimpannya lokal di
+browser, lalu mengekspornya sebagai CSV. Tidak ada API, tidak ada server,
+tidak ada token, tidak ada request keluar.
+
+Fokusnya cuma satu: scrape -> CSV. Template kolom CSV bisa diubah di satu file
+(kita isi nanti sesuai kebutuhan sales).
+
+FILE RILIS
+----------
+Zip siap upload / share:
+
+  release/sdr-lead-capture-csv-1.0.1-chrome.zip   (219 KB)
+
+Checksum SHA-256:
+
+  aa6ece19247452aaecb23523080fcd502265b07f8d637e51c7816cbb134d6d4e
+
+Cara pakai zip:
+  A. Chrome Web Store -> upload zip ini sebagai package.
+  B. Atau extract zip, lalu chrome://extensions -> Developer mode ->
+     Load unpacked -> pilih folder hasil extract.
+
+Alternatif tanpa zip:
+  chrome://extensions -> Load unpacked -> apps/extension/.output/chrome-mv3
+
+CARA PAKAI
+----------
+1. Buka Google Maps, klik satu tempat (jangan cuma hover).
+2. Klik ikon extension di toolbar, atau pill "SDR Capture" di kanan bawah.
+3. Data langsung terbaca: nama, kategori, alamat, telepon, website, rating,
+   jumlah review, dan link Maps.
+4. Klik "Simpan ke CSV".
+5. Ulangi untuk tempat lain.
+6. Klik "Data" (popup) atau ikon clipboard (drawer) untuk buka halaman hasil.
+7. Klik "Download CSV".
+
+CSV yang diekspor berisi semua baris yang belum dihapus. Setelah download,
+data tetap tersimpan lokal sampai dihapus manual.
+
+TEMPLATE CSV
+------------
+File: apps/extension/lib/csv-template.ts
+
+Semua kolom diatur di array CSV_COLUMNS. Setiap item punya:
+  { header: "Nama Kolom", value: (capture) => "nilai" }
+
+Field yang tersedia di setiap Capture:
+  capturedAt, companyName, category, address, phone, website, socialType,
+  socialUrl, instagram, rating, reviewsCount, mapsUrl, isSocialMediaOnly
+
+Kolom CSV mengikuti crm-contact-template.xlsx (13 kolom, urutan sama):
+
+  *Nama, Sapaan, URL Foto, *Tipe Kontak, Grup Kontak, Perusahaan,
+  Alamat Penagihan, Negara, Provinsi, Kota, Email, Nomor Telepon,
+  Tanggal Lahir (dd/mm/yyyy)
+
+Mapping:
+  *Nama             <- nama bisnis
+  *Tipe Kontak      <- "Vendor" (konstanta DEFAULT_CONTACT_TYPE)
+  Grup Kontak       <- kategori Maps
+  Perusahaan        <- nama bisnis
+  Alamat Penagihan  <- alamat Maps
+  Negara            <- "Indonesia" (konstanta DEFAULT_COUNTRY)
+  Nomor Telepon     <- telepon Maps
+
+Kosong karena tidak ada di Maps:
+  Sapaan, URL Foto, Provinsi, Kota, Email, Tanggal Lahir
+
+Data scrape lain (website, sosmed, rating, link Maps) TIDAK diekspor karena
+template CRM tidak punya kolomnya. Kalau importer menerima kolom tambahan,
+tambahkan di akhir array CSV_COLUMNS.
+
+Setelah mengubah template:
+
+  pnpm install
+  pnpm build
+  pnpm zip
+
+Zip baru muncul di apps/extension/.output/.
+
+PENYIMPANAN DATA
+----------------
+- Lokasi: chrome.storage.local, key "sdr_captures"
+- Tidak ada data yang dikirim keluar.
+- Uninstall extension = data hilang. Download CSV dulu.
+- Data terikat ke profil Chrome di device itu (tidak sync antar device).
+
+STRUKTUR PENTING
+----------------
+apps/extension/
+  entrypoints/popup/        popup capture
+  entrypoints/content/      scraper + drawer in-page
+  entrypoints/dashboard/    daftar hasil scrape + download CSV
+  lib/capture.ts            tipe Capture + mapping dari scraper
+  lib/csv-template.ts       TEMPLATE CSV (ubah di sini)
+  lib/store.ts              baca/tulis chrome.storage.local
+  lib/download.ts           trigger download file
+  components/capture-card.tsx  preview hasil scrape
+packages/ui/                komponen shadcn
+packages/core/              util CSV escaping + schema lama
+legacy/                     POC vanilla JS lama
+apps/api, apps/web          eksperimen infra sebelumnya, TIDAK DIPAKAI
+
+PERMISSION EXTENSION
+--------------------
+- permissions       : storage
+- host_permissions  : hanya google.com/maps dan google.co.id/maps
+- Tidak ada permission network/identity/downloads/alarms.
+
+SUDAH DIVERIFIKASI
+------------------
+- 40 tes core + 9 tes scraper, semua hijau.
+- Typecheck bersih.
+- Build produksi + zip bersih (219 KB).
+- E2E Chromium headless:
+    popup render
+    -> drawer scrape fixture Maps
+    -> simpan ke CSV
+    -> baris muncul di dashboard
+    -> download CSV
+    -> isi CSV sesuai template (header + data benar)
+- Screenshot bukti: artifacts/popup.png, maps-drawer.png, dashboard.png
+
+BATASAN / CATATAN
+-----------------
+1. Scraper bergantung pada class DOM Google Maps. Kalau Google mengubah markup,
+   perbaiki selector di entrypoints/content/scraper.ts.
+2. Icon masih placeholder (lingkaran biru). Perlu icon final sebelum publish.
+3. Untuk Chrome Web Store perlu: icon, screenshot 1280x800, privacy policy
+   (walau tidak ada data keluar), dan description.
+4. Tidak ada dedupe otomatis. Kalau tempat yang sama di-capture dua kali,
+   akan muncul dua baris. Bisa dibersihkan manual di dashboard.
+5. Tidak ada fitur edit. Kalau salah, hapus baris lalu capture ulang.
+6. Bundle total ~757 KB (content script 283 KB, shared chunk 302 KB).
+
+OPSIONAL: MEMBERESKAN INFRA LAMA
+--------------------------------
+Sebelumnya sempat ada deploy Cloudflare (Worker sdr-api-staging, sdr-web, dan
+D1 sdr-leads-staging). Extension versi ini TIDAK memakainya. Kalau mau bersih,
+hapus dari dashboard Cloudflare:
+
+  - Worker: sdr-api-staging
+  - Worker: sdr-web
+  - D1    : sdr-leads-staging
+
+Tidak wajib. Tidak memengaruhi extension.
+
+CHECKLIST PENERIMA
+------------------
+[ ] Extract zip / load unpacked
+[ ] Buka Maps, capture 1 tempat, simpan
+[ ] Buka Data, cek baris
+[ ] Download CSV, buka di Excel/Sheets
+[ ] Ubah template di lib/csv-template.ts kalau perlu
+[ ] pnpm build && pnpm zip
+[ ] Upload zip ke Chrome Web Store (kalau mau distribusi)
+
+================================================================================
+SELESAI
+================================================================================

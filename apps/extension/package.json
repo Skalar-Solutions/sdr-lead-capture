@@ -1,7 +1,7 @@
 {
   "name": "@sdr/extension",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -12,15 +12,12 @@
     "typecheck": "wxt prepare && tsc --noEmit"
   },
   "dependencies": {
-    "@hookform/resolvers": "^7.0.8",
     "@sdr/core": "workspace:*",
     "@sdr/ui": "workspace:*",
     "lucide-react": "^1.77.0",
     "react": ">=18",
     "react-dom": ">=18",
-    "react-hook-form": "^7.92.0",
-    "sonner": "^2.0.8",
-    "zod": "^4.6.7"
+    "sonner": "^2.0.8"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.5",

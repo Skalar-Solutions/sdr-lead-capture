@@ -1,6 +1,7 @@
 import {
   LEAD_STATUSES,
   LEAD_STATUS_LABELS,
+  PRIORITY_LABELS,
   WEBSITE_STATUS_LABELS,
   type Lead,
   type LeadStatus,
@@ -403,7 +404,9 @@ export default function App() {
                   </TableCell>
                   <TableCell className="align-top">
                     <span className="text-sm text-amber-500">{"★".repeat(lead.priority)}</span>
-                    <div className="text-xs text-muted-foreground">{lead.gapScore}/10 gap</div>
+                    <div className="text-xs text-muted-foreground">
+                      {PRIORITY_LABELS[lead.priority] ?? ""}
+                    </div>
                   </TableCell>
                   <TableCell className="align-top">
                     <Badge variant="outline">{LEAD_STATUS_LABELS[lead.status]}</Badge>

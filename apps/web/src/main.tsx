@@ -5,6 +5,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 import App from "./App";
+import { bootstrapTokenFromHash } from "./lib/api";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -12,6 +13,8 @@ const queryClient = new QueryClient({
     queries: { retry: 1, refetchOnWindowFocus: false },
   },
 });
+
+bootstrapTokenFromHash();
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Elemen #root tidak ditemukan");

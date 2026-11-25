@@ -1,122 +1,105 @@
-# SDR Lead Capture
+# SDR Lead Capture (CSV edition)
 
-Extension capture lead dari Google Maps + API Cloudflare + dashboard staging.
-POC lama ada di `legacy/` (read-only).
+Extension Chrome mandiri untuk scrape data bisnis dari Google Maps dan
+mengekspornya ke CSV. **Tanpa backend, tanpa API, tanpa token.** Semua data
+disimpan lokal di browser.
 
-## Status
+Zip siap upload: `release/sdr-lead-capture-csv-1.0.1-chrome.zip`
 
-| Bagian | Status |
-|---|---|
-| `packages/core` | ✅ schema `Lead`, telepon E.164, dedupe, scoring, CSV — 40 tes |
-| `packages/ui` | ✅ 25 komponen shadcn/ui + portal container untuk Shadow DOM |
-| `apps/extension` | ✅ WXT + React: popup, **drawer in-page**, outbox, sync otomatis — 9 tes |
-| `apps/api` | ✅ Hono + D1: CRUD, sync batch, idempotency, dedupe, CSV, auth — 4 tes |
-| `apps/web` | ✅ Dashboard React: stats, tabel, filter, hapus, export CSV |
+## Cara pakai
 
-Total **53 tes**, semua typecheck bersih, semua build lolos.
+1. Load `chrome://extensions` → Developer mode → **Load unpacked** →
+   `apps/extension/.output/chrome-mv3` (atau extract zip rilis).
+2. Buka Google Maps, klik satu tempat.
+3. Klik ikon extension atau pill **SDR Capture** di kanan bawah.
+4. Klik **Simpan ke CSV**.
+5. Klik **Data** / **Download CSV** untuk export.
 
-## Menjalankan lokal
+Data tersimpan di `chrome.storage.local` dengan key `sdr_captures`.
+Tidak ada request keluar; `fetch` yang tersisa di bundle cuma untuk memuat CSS
+internal extension.
 
-Butuh Node 20+ dan pnpm.
+## Template CSV
 
-```bash
-pnpm install
+Semua kolom diatur di **satu file**:
 
-# 1) API (terminal 1)
-cp apps/api/.dev.vars.example apps/api/.dev.vars
-pnpm --filter @sdr/api db:migrate      # bikin tabel di D1 lokal
-pnpm --filter @sdr/api dev             # http://127.0.0.1:8787
-
-# 2) Dashboard (terminal 2)
-pnpm --filter @sdr/web dev             # http://localhost:5173
-
-# 3) Extension (terminal 3)
-pnpm dev
+```
+apps/extension/lib/csv-template.ts
 ```
 
-Load extension: `chrome://extensions` → Developer mode → **Load unpacked** → `apps/extension/.output/chrome-mv3-dev`.
+Ubah array `CSV_COLUMNS` (tambah/hapus/urutkan), lalu:
 
-Token development default: `dev-token` (ada di `.dev.vars`, pengaturan extension, dan dashboard).
+```bash
+pnpm build
+pnpm zip
+```
 
-### Alur
+Default kolom (mengikuti `crm-contact-template.xlsx`):
 
-1. Buka Google Maps, klik satu tempat.
-2. Klik ikon extension **atau** pill `SDR Capture` di kanan bawah.
-3. Data terisi otomatis → **Simpan ke outbox**.
-4. Outbox dikirim ke API tiap 1 menit, saat klik tombol sync, atau saat browser mulai.
-5. Dashboard menampilkan lead yang sudah masuk.
+```
+*Nama, Sapaan, URL Foto, *Tipe Kontak, Grup Kontak, Perusahaan,
+Alamat Penagihan, Negara, Provinsi, Kota, Email, Nomor Telepon,
+Tanggal Lahir (dd/mm/yyyy)
+```
+
+Mapping:
+
+| Kolom template | Sumber |
+|---|---|
+| `*Nama` | nama bisnis |
+| `*Tipe Kontak` | `Vendor` (konstanta) |
+| `Grup Kontak` | kategori Maps |
+| `Perusahaan` | nama bisnis |
+| `Alamat Penagihan` | alamat Maps |
+| `Negara` | `Indonesia` (konstanta) |
+| `Nomor Telepon` | telepon Maps |
+
+Kolom `Sapaan`, `URL Foto`, `Provinsi`, `Kota`, `Email`, `Tanggal Lahir`
+dibiarkan kosong karena tidak ada di data Maps. Data scrape lain (website,
+sosmed, rating, link Maps) tidak diekspor karena template tidak punya kolomnya —
+tambahkan sendiri di akhir array kalau CRM kamu menerima kolom ekstra.
 
 ## Perintah
 
 ```bash
-pnpm test                       # semua paket
-pnpm typecheck                  # semua paket
-pnpm --filter @sdr/extension build
-pnpm --filter @sdr/extension zip
-pnpm --filter @sdr/web build
-pnpm --filter @sdr/api exec wrangler deploy --dry-run --outdir dist
+pnpm install
+pnpm dev                 # WXT dev + HMR
+pnpm build               # build production
+pnpm zip                 # zip siap upload
+pnpm test                # 40 tes core + 9 tes scraper
+pnpm typecheck
+pnpm e2e                 # butuh: pnpm exec playwright install chromium
 ```
 
-## API
+## Struktur
 
-Base: `http://127.0.0.1:8787`
-
-| Method | Path | Auth | Fungsi |
-|---|---|---|---|
-| GET | `/health` | – | health check |
-| GET | `/v1/me` | ✅ | user + org + stats hari ini |
-| POST | `/v1/leads` | ✅ | create, `Idempotency-Key` |
-| GET | `/v1/leads` | ✅ | list, filter `status`, `q`, `limit`, `offset` |
-| GET | `/v1/leads/:id` | ✅ | detail |
-| PATCH | `/v1/leads/:id` | ✅ | update, optimistic concurrency |
-| DELETE | `/v1/leads/:id` | ✅ | soft delete |
-| GET | `/v1/leads/export.csv` | ✅ | export CSV |
-| POST | `/v1/sync` | ✅ | batch dari outbox (maks 200) |
-| GET | `/v1/stats/today` | ✅ | counter harian |
-
-Auth: `Authorization: Bearer <token>`. Token bisa `DEV_AUTH_TOKEN` (dev) atau **Google ID token** (diverifikasi via JWKS, tanpa SDK).
-
-## Deploy
-
-1. Ganti `database_id` di `apps/api/wrangler.jsonc` dengan ID D1 staging/produksi.
-2. Set secret:
-   ```bash
-   cd apps/api
-   pnpm exec wrangler secret put DEV_AUTH_TOKEN --env staging
-   pnpm exec wrangler secret put GOOGLE_CLIENT_ID --env staging
-   ```
-3. Migrasi remote:
-   ```bash
-   pnpm exec wrangler d1 migrations apply sdr-leads-staging --remote --env staging
-   ```
-4. Deploy:
-   ```bash
-   pnpm exec wrangler deploy --env staging
-   pnpm --filter @sdr/web exec wrangler deploy
-   ```
-5. Pasang custom domain: `api-staging.` untuk Worker API, `app-staging.` untuk dashboard.
-6. Lindungi dashboard dengan **Cloudflare Access** (Google IdP). Jangan taruh API di belakang Access — extension memakai Bearer token.
-
-Di produksi, isi `ALLOWED_ORIGINS` dengan origin dashboard (`https://app.domain.com`).
-
-## Aturan UI
-
-Semua komponen wajib dari `@sdr/ui` (shadcn). Menambah komponen:
-
-```bash
-pnpm dlx shadcn@latest add <nama> -c packages/ui -y
-grep -rl 'from "cn"' packages/ui/src/components/ui \
-  | xargs perl -pi -e 's{from "cn"}{from "../../lib/utils"}g'
-pnpm --filter @sdr/ui typecheck
+```
+apps/extension/          extension (WXT + React + Tailwind + shadcn)
+  entrypoints/popup/     capture dari toolbar
+  entrypoints/content/   scraper + drawer in-page
+  entrypoints/dashboard/ daftar hasil scrape + export CSV
+  lib/capture.ts         tipe Capture
+  lib/csv-template.ts    ⭐ template kolom CSV
+  lib/store.ts           baca/tulis chrome.storage.local
+  lib/download.ts        trigger download CSV
+  components/            CaptureCard
+packages/ui/             25 komponen shadcn
+packages/core/           schema/CSV util (dipakai untuk escaping)
+legacy/                  POC vanilla JS lama
 ```
 
-Kalau komponen baru memakai portal dan perlu dipakai di drawer, tambahkan
-`container={usePortalContainer() ?? undefined}` seperti di `select.tsx` dan `tooltip.tsx`.
+`apps/api` dan `apps/web` adalah eksperimen infra sebelumnya. **Tidak dipakai**
+oleh extension dan boleh diabaikan/dihapus.
 
-## Yang belum (sadar, bukan bug)
+## Yang perlu diketahui
 
-1. **Login Google di extension belum disambung.** Masih pakai token statis di Pengaturan. Server sudah siap verifikasi Google ID token; tinggal panggil `chrome.identity.getAuthToken` setelah OAuth client ID didaftarkan.
-2. **Dashboard produksi masih butuh token manual.** Access melindungi halaman, tapi panggilan ke `api.` tetap pakai Bearer. Nanti diganti Google ID token/OAuth.
-3. **Icon masih placeholder** (lingkaran biru dari POC).
-4. **Belum ada `.crx` + update XML** untuk force-install enterprise, dan belum ada privacy policy.
-5. Bundle popup ~697 KB dan content script ~663 KB (belum di-code-split).
+- Scraper bergantung pada class DOM Google Maps (`h1.DUwDvf`, `div.F7nice`,
+  `button[data-item-id=...]`). Kalau Google mengubah markup, selector perlu
+  diperbarui di `entrypoints/content/scraper.ts`.
+- Data hanya ada di profil Chrome tersebut. Uninstall extension = data hilang.
+  Download CSV sebelum uninstall.
+- Icon masih placeholder (lingkaran biru).
+- Untuk Chrome Web Store: perlu icon final, screenshot, privacy policy
+  (walau tidak ada data keluar), dan description.
+- E2E sudah memverifikasi: popup render → drawer scrape → simpan → dashboard →
+  download CSV dengan isi yang benar.

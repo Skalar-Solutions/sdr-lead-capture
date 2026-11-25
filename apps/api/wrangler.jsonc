@@ -21,13 +21,13 @@
         {
           "binding": "DB",
           "database_name": "sdr-leads-staging",
-          "database_id": "REPLACE_WITH_STAGING_D1_ID",
+          "database_id": "7b2c3d7d-bcbc-4759-8ffd-19094c8fc18a",
           "migrations_dir": "migrations"
         }
       ],
       "vars": {
         "DEFAULT_ORG_ID": "org_default",
-        "ALLOWED_ORIGINS": "http://localhost:5173"
+        "ALLOWED_ORIGINS": "https://sdr-web.bisablanja.workers.dev,http://localhost:5173"
       }
     }
   }
