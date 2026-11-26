@@ -5,6 +5,23 @@ Detail teknis ada di [`HANDOVER.txt`](HANDOVER.txt).
 
 ---
 
+## 1.0.6 — 26 November 2026
+
+**Fokus: evaluasi & tagging lead SDR langsung saat capture + dua format CSV.**
+
+Yang berubah:
+
+- **SDR Tagging di kotak capture:** sebelum klik **Simpan ke CSV**, tim SDR bisa langsung memilih **Status Website** (`Tidak Ada`, `Outdated`, `Bad UX`, `Lumayan`), menandai **Celah Digital**, **Peluang Solusi**, **Prioritas (1–5)**, serta mengisi **Nama/Jabatan PIC** dan **Catatan sales**.
+- **Nilai awal otomatis:** bisnis tanpa website otomatis ditandai status `Tidak Ada`, celah `Tanpa Website`, solusi `Web Dev`, dan prioritas `5 (HOT)`. Bisnis yang hanya punya link sosmed otomatis mendapat celah `Sosmed Only` dan catatan link sosmed.
+- **Halaman Data Lead diperbarui:** menampilkan status website, celah digital, peluang solusi, prioritas, PIC, dan catatan (beserta baris detail yang bisa dibuka), serta pencarian mencakup status, PIC, dan catatan.
+- **Dua format ekspor CSV:**
+  - **CSV CRM** (`crm-contact-YYYY-MM-DD.csv`): tetap 13 kolom sesuai template impor CRM.
+  - **CSV SDR Lengkap** (`sdr-leads-lengkap-YYYY-MM-DD.csv`): 21 kolom berisi seluruh data scrape dan hasil evaluasi/tagging SDR.
+- **Kebersihan & filter telepon:** nomor telepon otomatis dinormalisasi menjadi angka murni (tanpa spasi/tanda hubung), dan bisnis tanpa nomor telepon dilewati (ditandai **Tanpa telepon** pada mode Ambil Semua).
+- **Migrasi data lama otomatis:** data yang sudah tersimpan dari versi sebelumnya otomatis dilengkapi field tagging default saat dibuka, tanpa merusak data lama.
+
+---
+
 ## 1.0.5 — 26 November 2026
 
 **Fokus: memudahkan tim SDR yang tidak teknis.**

@@ -34,7 +34,7 @@ describe("extractBusinessData", () => {
     expect(result.rating).toBe("4,8");
     expect(result.reviewsCount).toBe("1.234");
     expect(result.address).toBe("Jl. Raya No. 1");
-    expect(result.phone).toBe("0812-3456-7890");
+    expect(result.phone).toBe("081234567890");
     expect(result.website).toBe("https://warungsteak.id");
     expect(result.isRealWebsite).toBe(true);
     expect(result.isSocialMediaOnly).toBe(false);
@@ -88,7 +88,7 @@ describe("extractBusinessData", () => {
     const result = extractBusinessData(doc, MAPS_URL);
 
     expect(result.address).toBe("Jl. Bendungan Hilir No.5");
-    expect(result.phone).toBe("0821-1342-5107");
+    expect(result.phone).toBe("082113425107");
     expect(result.address).not.toMatch(/[\uE000-\uF8FF]/);
     expect(result.phone).not.toMatch(/[\uE000-\uF8FF]/);
   });
@@ -109,7 +109,22 @@ describe("extractBusinessData", () => {
     const result = extractBusinessData(doc, MAPS_URL);
 
     expect(result.address).toBe("Jl. Merdeka No. 1");
-    expect(result.phone).toBe("021-1234-5678");
+    expect(result.phone).toBe("02112345678");
+  });
+
+  it("menghapus spasi, tanda hubung, dan simbol dari nomor telepon", () => {
+    const doc = parse(`
+      <div role="main">
+        <h1 class="DUwDvf">Kopi Nusantara</h1>
+        <button data-item-id="phone:tel:+6281234567890" aria-label="Telepon: +62 812 3456-7890">
+          (021) 555 1234
+        </button>
+      </div>
+    `);
+
+    const result = extractBusinessData(doc, MAPS_URL);
+
+    expect(result.phone).toBe("0215551234");
   });
 
   it("tidak memakai heading 'Hasil' dari halaman pencarian sebagai nama bisnis", () => {

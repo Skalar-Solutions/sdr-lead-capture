@@ -10,7 +10,7 @@ export default defineConfig({
     name: "SDR Lead Capture",
     description:
       "Capture B2B leads from Google Maps and export them to CSV. Fully offline, no data leaves your browser.",
-    version: "1.0.5",
+    version: "1.0.6",
     icons: {
       "16": "icon16.png",
       "32": "icon32.png",

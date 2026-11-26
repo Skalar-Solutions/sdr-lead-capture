@@ -106,7 +106,7 @@ try {
         .filter(Boolean),
     );
   const uiText = leaves.filter((text) => text.length < 300).join("\n");
-  if (/Terekstrak:\s*(hasil|results?)\b/i.test(uiText)) {
+  if (/(Terekstrak|Terbaca):\s*(hasil|results?)\b/i.test(uiText)) {
     throw new Error('UI masih menangkap heading "Hasil" sebagai nama bisnis');
   }
 
@@ -134,7 +134,9 @@ try {
 
   // Simpan ulang tempat yang sama harus ditolak oleh dedupe.
   await maps.bringToFront();
-  await maps.locator('sdr-capture-ui button[title="Scrape ulang"]').click();
+  await maps
+    .locator('sdr-capture-ui button[title="Baca ulang data bisnis"], sdr-capture-ui button[title="Scrape ulang"]')
+    .click();
   const saveAgain = maps.getByRole("button", { name: /Simpan ke CSV/ });
   await saveAgain.waitFor({ state: "visible", timeout: 15000 });
   await maps.waitForTimeout(500);

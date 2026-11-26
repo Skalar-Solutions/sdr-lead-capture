@@ -3,11 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   captureIdentity,
   hasPlaceId,
+  hasRealWebsite,
   isCaptureUseful,
   isDuplicateCapture,
+  normalizeCapture,
   normalizeMapsUrl,
   normalizeName,
   placeIdFromUrl,
+  toCapture,
   type Capture,
 } from "./capture";
 
@@ -30,6 +33,14 @@ function makeCapture(overrides: Partial<Capture> = {}): Capture {
     reviewsCount: "1.234",
     mapsUrl: PLACE_URL,
     isSocialMediaOnly: false,
+    websiteStatus: "none",
+    digitalGaps: ["no_website"],
+    services: ["website_dev"],
+    priority: 5,
+    picName: "",
+    picRole: "",
+    notes: "",
+    whatsapp: "0821-1342-5107",
     ...overrides,
   };
 }
@@ -148,20 +159,172 @@ describe("place helpers", () => {
 });
 
 describe("isCaptureUseful", () => {
-  it("menerima nama + minimal satu sinyal bisnis", () => {
+  it("menerima nama + nomor telepon", () => {
     expect(isCaptureUseful(makeCapture())).toBe(true);
     expect(isCaptureUseful(makeCapture({ category: "", address: "", phone: "0812" }))).toBe(true);
   });
 
-  it("menolak baris yang hanya punya nama", () => {
-    expect(
-      isCaptureUseful(
-        makeCapture({ category: "", address: "", phone: "", website: "", socialUrl: "" }),
-      ),
-    ).toBe(false);
+  it("menolak bisnis tanpa nomor telepon", () => {
+    expect(isCaptureUseful(makeCapture({ phone: "" }))).toBe(false);
+    expect(isCaptureUseful(makeCapture({ phone: "   " }))).toBe(false);
   });
 
   it("menolak nama kosong", () => {
     expect(isCaptureUseful(makeCapture({ companyName: "  " }))).toBe(false);
+  });
+});
+
+describe("toCapture & default tagging", () => {
+  const basePlace = {
+    companyName: "Warung Steak Pak Joko",
+    category: "Steakhouse",
+    address: "Jl. Raya No. 1",
+    phone: "081234567890",
+    website: "",
+    isRealWebsite: false,
+    isSocialMediaOnly: false,
+    socialType: null as string | null,
+    socialUrl: "",
+    instagramHandle: "",
+    rating: "4,8",
+    reviewsCount: "1.234",
+    mapsUrl: PLACE_URL,
+  };
+
+  it("memberi default HOT untuk bisnis tanpa website", () => {
+    const capture = toCapture(basePlace);
+    expect(capture.websiteStatus).toBe("none");
+    expect(capture.digitalGaps).toEqual(["no_website"]);
+    expect(capture.services).toEqual(["website_dev"]);
+    expect(capture.priority).toBe(5);
+    expect(capture.whatsapp).toBe("081234567890");
+    expect(hasRealWebsite(capture)).toBe(false);
+  });
+
+  it("menambahkan gap social_media_only dan catatan otomatis untuk sosmed only", () => {
+    const capture = toCapture({
+      ...basePlace,
+      isSocialMediaOnly: true,
+      socialType: "Instagram",
+      socialUrl: "https://www.instagram.com/warungsteak/",
+      instagramHandle: "@warungsteak",
+    });
+    expect(capture.websiteStatus).toBe("none");
+    expect(capture.digitalGaps).toEqual(["no_website", "social_media_only"]);
+    expect(capture.notes).toBe("Hanya ada link Instagram: https://www.instagram.com/warungsteak/");
+    expect(capture.priority).toBe(5);
+    expect(hasRealWebsite(capture)).toBe(false);
+  });
+
+  it("memberi status decent dan prioritas 3 untuk bisnis dengan website real", () => {
+    const capture = toCapture({
+      ...basePlace,
+      website: "https://warungsteak.id",
+      isRealWebsite: true,
+    });
+    expect(capture.websiteStatus).toBe("decent");
+    expect(capture.digitalGaps).toEqual([]);
+    expect(capture.services).toEqual(["website_dev"]);
+    expect(capture.priority).toBe(3);
+    expect(hasRealWebsite(capture)).toBe(true);
+  });
+
+  it("hasRealWebsite mempertimbangkan websiteStatus dan isSocialMediaOnly", () => {
+    expect(
+      hasRealWebsite(
+        makeCapture({
+          website: "https://example.com",
+          isSocialMediaOnly: false,
+          websiteStatus: "none",
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      hasRealWebsite(
+        makeCapture({
+          website: "https://instagram.com/toko",
+          isSocialMediaOnly: true,
+          websiteStatus: "decent",
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      hasRealWebsite(
+        makeCapture({
+          website: "https://example.com",
+          isSocialMediaOnly: false,
+          websiteStatus: "outdated",
+        }),
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("normalizeCapture (migrasi data lama)", () => {
+  it("mengisi field tagging default untuk record lama tanpa website", () => {
+    const legacy = {
+      id: "old-1",
+      capturedAt: "2026-11-25T10:00:00.000Z",
+      companyName: "Toko Lama",
+      category: "Retail",
+      address: "Jl. Lama 1",
+      phone: "08111111111",
+      website: "",
+      socialType: "Instagram",
+      socialUrl: "https://instagram.com/tokolama",
+      instagram: "@tokolama",
+      rating: "4,5",
+      reviewsCount: "10",
+      mapsUrl: PLACE_URL,
+      isSocialMediaOnly: true,
+    };
+
+    const migrated = normalizeCapture(legacy);
+    expect(migrated.websiteStatus).toBe("none");
+    expect(migrated.digitalGaps).toEqual(["no_website", "social_media_only"]);
+    expect(migrated.services).toEqual(["website_dev"]);
+    expect(migrated.priority).toBe(5);
+    expect(migrated.whatsapp).toBe("08111111111");
+    expect(migrated.picName).toBe("");
+    expect(migrated.picRole).toBe("");
+    expect(migrated.notes).toBe("");
+  });
+
+  it("mengisi field tagging default untuk record lama dengan website", () => {
+    const migrated = normalizeCapture({
+      id: "old-2",
+      capturedAt: "2026-11-25T10:00:00.000Z",
+      companyName: "PT Maju",
+      phone: "0215551234",
+      website: "https://ptmaju.co.id",
+      isSocialMediaOnly: false,
+    });
+    expect(migrated.websiteStatus).toBe("decent");
+    expect(migrated.digitalGaps).toEqual([]);
+    expect(migrated.services).toEqual(["website_dev"]);
+    expect(migrated.priority).toBe(3);
+    expect(migrated.whatsapp).toBe("0215551234");
+  });
+
+  it("mempertahankan field tagging yang sudah diedit", () => {
+    const edited = normalizeCapture({
+      ...makeCapture(),
+      websiteStatus: "bad-ux",
+      digitalGaps: ["not_mobile_friendly", "no_seo"],
+      services: ["uiux_redesign", "seo"],
+      priority: 4,
+      picName: "Budi",
+      picRole: "Owner",
+      notes: "Follow up Senin",
+      whatsapp: "08129999999",
+    });
+    expect(edited.websiteStatus).toBe("bad-ux");
+    expect(edited.digitalGaps).toEqual(["not_mobile_friendly", "no_seo"]);
+    expect(edited.services).toEqual(["uiux_redesign", "seo"]);
+    expect(edited.priority).toBe(4);
+    expect(edited.picName).toBe("Budi");
+    expect(edited.picRole).toBe("Owner");
+    expect(edited.notes).toBe("Follow up Senin");
+    expect(edited.whatsapp).toBe("08129999999");
   });
 });

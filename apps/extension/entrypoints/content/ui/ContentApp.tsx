@@ -45,7 +45,9 @@ export function ContentApp() {
         setSaved(false);
         setNotice(
           data.companyName
-            ? "Data belum lengkap. Tunggu detail bisnis terbuka, lalu coba lagi."
+            ? !next.phone
+              ? `${data.companyName} tidak punya nomor telepon — dilewati.`
+              : "Data belum lengkap. Tunggu detail bisnis terbuka, lalu coba lagi."
             : "Klik salah satu bisnis di Google Maps dulu.",
         );
       }
@@ -117,17 +119,17 @@ export function ContentApp() {
     setOpen(true);
   }
 
-  async function handleSave() {
-    if (!capture) return;
+  async function handleSave(updated: Capture) {
     setSaving(true);
     try {
-      const result = await addCapture(capture);
+      const result = await addCapture(updated);
+      setCapture(updated);
       setSavedCount(result.count);
       setSaved(true);
       setNotice(
         result.duplicate
-          ? `Sudah ada di CSV: ${capture.companyName}`
-          : `Tersimpan ke CSV: ${capture.companyName}`,
+          ? `Sudah ada di CSV: ${updated.companyName}`
+          : `Tersimpan ke CSV: ${updated.companyName}`,
       );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));

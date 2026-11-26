@@ -15,7 +15,7 @@ Google Sheets.
 
 > Sudah dipasang oleh admin? Lewati ke bagian **2. Ambil satu bisnis**.
 
-1. Minta file **`sdr-lead-capture-1.0.5-chrome.zip`** ke admin.
+1. Minta file **`sdr-lead-capture-1.0.6-chrome.zip`** ke admin.
 2. **Extract** file itu ke folder yang mudah diingat, misalnya
    `Dokumen/SDR Lead Capture`.
    **Jangan hapus folder ini** setelah dipasang.
@@ -35,7 +35,8 @@ Kalau berhasil, ikon hitam putih SDR Lead Capture akan muncul di toolbar Chrome.
 2. Cari bisnis, misalnya `coffee shop cipete`.
 3. **Klik salah satu hasil** sampai detailnya terbuka di panel kiri.
    Kotak data akan terbuka otomatis di kanan bawah.
-4. Periksa sebentar: nama, alamat, telepon, dan kategori.
+4. Periksa sebentar: nama, alamat, telepon (otomatis angka murni tanpa spasi), dan kategori.
+   Kamu juga bisa langsung mengisi **Status Website**, **Celah Digital**, **Peluang Solusi**, **Prioritas**, serta **Catatan & PIC** sebelum menyimpan.
 5. Klik **Simpan ke CSV**.
 6. Ulangi untuk bisnis berikutnya.
 
@@ -68,7 +69,9 @@ terbaca**. Hasil yang sudah terbaca tetap bisa disimpan.
 
 1. Klik **Lihat Data** di kotak capture, atau klik ikon extension lalu
    **Lihat Data**.
-2. Klik **Download CSV**.
+2. Pilih tombol download:
+   - **CSV CRM** (13 kolom, siap impor ke CRM)
+   - **CSV SDR Lengkap** (21 kolom, termasuk evaluasi, tag, PIC, dan catatan sales)
 3. File masuk ke folder **Downloads** komputer.
 4. Buka file itu dengan Excel, atau upload ke Google Sheets.
 
@@ -91,6 +94,7 @@ Sisanya kosong karena memang tidak ada di Google Maps.
 |---|---|
 | **HOT** | Bisnis ini belum punya website. Biasanya prospek yang cocok ditawari website. |
 | **Sudah disimpan** | Bisnis ini sudah pernah masuk daftar, jadi tidak disimpan dua kali. |
+| **Tanpa telepon** | Bisnis tidak mencantumkan nomor telepon di Maps sehingga otomatis dilewati. |
 | **Tidak terbaca** | Data bisnisnya gagal diambil. Coba ambil ulang nanti. |
 | **Dilewati** | Tidak sempat diproses karena proses dihentikan. |
 

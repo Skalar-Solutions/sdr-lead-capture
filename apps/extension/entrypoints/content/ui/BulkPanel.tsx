@@ -19,7 +19,7 @@ import { addManyCaptures, openDashboard, readCaptures } from "@/lib/store";
 import { findFeed, loadResultLinks, openAndExtract, sleep, type ResultLink } from "../bulk";
 
 type Phase = "setup" | "loading" | "scraping" | "review" | "saved";
-type ItemStatus = "pending" | "ok" | "failed" | "duplicate" | "skipped";
+type ItemStatus = "pending" | "ok" | "failed" | "duplicate" | "skipped" | "no_phone";
 
 interface BulkItem {
   link: ResultLink;
@@ -98,9 +98,10 @@ export function BulkPanel({ onClose, onRunningChange, onSaved }: BulkPanelProps)
         } else {
           const capture = toCapture(place);
           const duplicate = isDuplicateCapture(existing, capture);
+          const hasPhone = Boolean(capture.phone.trim());
           const useful = isCaptureUseful(capture);
           updateItem(i, {
-            status: duplicate ? "duplicate" : useful ? "ok" : "failed",
+            status: duplicate ? "duplicate" : !hasPhone ? "no_phone" : useful ? "ok" : "failed",
             capture,
             selected: !duplicate && useful,
           });
@@ -144,7 +145,9 @@ export function BulkPanel({ onClose, onRunningChange, onSaved }: BulkPanelProps)
   const selectedCount = items.filter((item) => item.selected).length;
   const allSelected = selectable.length > 0 && selectable.every((item) => item.selected);
   const processed = items.filter((item) => item.status !== "pending").length;
-  const hotCount = items.filter((item) => item.capture && !hasRealWebsite(item.capture)).length;
+  const hotCount = items.filter(
+    (item) => item.status === "ok" && item.capture && !hasRealWebsite(item.capture),
+  ).length;
 
   function toggleAll() {
     setItems((prev) =>
@@ -343,6 +346,7 @@ function BulkRow({
       </div>
       <div className="flex shrink-0 flex-wrap justify-end gap-1">
         {status === "duplicate" ? <Badge variant="outline">Sudah disimpan</Badge> : null}
+        {status === "no_phone" ? <Badge variant="outline">Tanpa telepon</Badge> : null}
         {status === "failed" ? <Badge variant="outline">Tidak terbaca</Badge> : null}
         {status === "skipped" ? <Badge variant="outline">Dilewati</Badge> : null}
         {status === "ok" && hot ? (

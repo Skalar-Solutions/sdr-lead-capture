@@ -61,7 +61,9 @@ export default function App() {
           if (!isCaptureUseful(next)) {
             setSource({
               tone: "warn",
-              text: "Data belum lengkap. Buka detail bisnisnya, lalu coba lagi.",
+              text: !next.phone
+                ? `${response.data.companyName} tidak punya nomor telepon — dilewati.`
+                : "Data belum lengkap. Buka detail bisnisnya, lalu coba lagi.",
             });
           } else {
             setCapture(next);
@@ -89,20 +91,20 @@ export default function App() {
     };
   }, []);
 
-  async function handleSave() {
-    if (!capture) return;
+  async function handleSave(updated: Capture) {
     setSaving(true);
     try {
-      const result = await addCapture(capture);
+      const result = await addCapture(updated);
+      setCapture(updated);
       setSavedCount(result.count);
       setSaved(true);
       if (result.duplicate) {
         toast.info("Sudah pernah disimpan", {
-          description: `${capture.companyName} tidak disimpan dua kali.`,
+          description: `${updated.companyName} tidak disimpan dua kali.`,
         });
       } else {
         toast.success("Tersimpan", {
-          description: `${capture.companyName}${capture.website ? "" : " · belum punya website"}`,
+          description: `${updated.companyName}${updated.website ? "" : " · belum punya website"}`,
         });
       }
     } catch (error) {
@@ -152,7 +154,13 @@ export default function App() {
 
       <div className="p-3">
         {capture ? (
-          <CaptureCard capture={capture} saving={saving} saved={saved} onSave={handleSave} />
+          <CaptureCard
+            key={capture.id}
+            capture={capture}
+            saving={saving}
+            saved={saved}
+            onSave={handleSave}
+          />
         ) : (
           <Card className="gap-0 py-0">
             <CardContent className="flex flex-col items-center gap-2.5 py-6 text-center">
