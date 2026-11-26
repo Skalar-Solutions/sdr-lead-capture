@@ -38,7 +38,9 @@ Sisanya dibiarkan kosong karena memang tidak ada di Google Maps.
 
 Saat ini extension dipasang manual (belum di Chrome Web Store).
 
-1. Minta file **`sdr-lead-capture-csv-1.0.3-chrome.zip`** ke yang mengirim ini.
+1. Minta file **`sdr-lead-capture-csv-1.0.3-chrome.zip`** ke yang mengirim ini,
+   atau download dari
+   [GitHub Releases](https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.3).
 2. **Extract** file zip itu ke folder yang gampang diingat, misalnya
    `Dokumen/SDR Lead Capture`.
    Penting: jangan hapus folder ini setelah dipasang.

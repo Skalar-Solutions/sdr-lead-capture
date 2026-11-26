@@ -21,6 +21,10 @@ Zip siap upload / share:
 
   release/sdr-lead-capture-csv-1.0.3-chrome.zip   (330 KB)
 
+Download internal:
+
+  https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.3
+
 Checksum SHA-256:
 
   af7bcd18633924478c8aa8f4bb2d1efccd1722eac267a022829e8fe8a5ace851
