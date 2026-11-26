@@ -34,9 +34,25 @@ Folder unpacked untuk internal:
   release/sdr-lead-capture-1.0.3/
 
 Cara pakai zip:
-  A. Chrome Web Store -> upload zip ini sebagai package.
+  A. Distribusi internal: download dari GitHub Releases.
   B. Atau extract zip, lalu chrome://extensions -> Developer mode ->
      Load unpacked -> pilih folder hasil extract.
+
+RILIS BARU (OTOMATIS)
+---------------------
+1. Naikkan versi di apps/extension/package.json dan wxt.config.ts.
+2. Commit perubahan.
+3. Buat dan push tag:
+
+     git tag vX.Y.Z
+     git push origin vX.Y.Z
+
+Workflow .github/workflows/release.yml otomatis:
+  test -> typecheck -> build -> zip -> attach zip + .sha256 ke GitHub Release.
+
+Nama asset: sdr-lead-capture-csv-X.Y.Z-chrome.zip
+Isi zip hanya build extension (tanpa source/test/node_modules).
+Tag harus sama dengan versi, mis. tag v1.0.3 untuk versi 1.0.3.
 
 Alternatif tanpa zip:
   chrome://extensions -> Load unpacked -> apps/extension/.output/chrome-mv3
@@ -180,8 +196,11 @@ Sumber token: packages/ui/src/styles/tokens.css
 - Border: selalu 1px; focus ring 2px.
 - Shadow: hanya shadow-lg untuk elemen mengambang; kartu memakai border.
 
-CHROME WEB STORE
-----------------
+CHROME WEB STORE (OPSIONAL)
+---------------------------
+Distribusi utama saat ini: GitHub Releases (zip).
+Chrome Web Store butuh akun developer berbayar; aset di bawah ini siap kalau
+nanti mau publish ke store.
 - Paket      : release/sdr-lead-capture-csv-1.0.3-chrome.zip
 - Screenshot : store/screenshot-1-dashboard.png (1280x800)
                store/screenshot-2-maps.png (1280x800)

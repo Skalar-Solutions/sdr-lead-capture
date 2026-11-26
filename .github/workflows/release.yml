@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag yang mau di-release, contoh: v1.0.3"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify tag matches version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./apps/extension/package.json').version")
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "Tag $TAG tidak cocok dengan versi v$VERSION di apps/extension/package.json" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        run: pnpm -r test
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Build and package
+        run: |
+          pnpm build
+          pnpm --filter @sdr/extension zip
+
+      - name: Prepare release asset
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SRC="apps/extension/.output/sdrextension-${VERSION}-chrome.zip"
+          OUT="sdr-lead-capture-csv-${VERSION}-chrome.zip"
+          cp "$SRC" "$OUT"
+          sha256sum "$OUT" > "$OUT.sha256"
+          echo "ASSET=$OUT" >> "$GITHUB_ENV"
+          echo "CHECKSUM_FILE=$OUT.sha256" >> "$GITHUB_ENV"
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          CHECKSUM=$(cut -d' ' -f1 "$CHECKSUM_FILE")
+
+          NOTES=$(cat <<EOF
+          Release internal SDR Lead Capture $VERSION.
+
+          Isi ZIP: build extension Chrome MV3 saja (manifest, popup, dashboard, content script, CSS, icon, font). Tanpa source, test, atau node_modules.
+
+          Install:
+          1. Extract ZIP.
+          2. Buka chrome://extensions
+          3. Aktifkan Developer mode.
+          4. Load unpacked -> pilih folder hasil extract.
+
+          SHA-256: $CHECKSUM
+          EOF
+          )
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ASSET" "$CHECKSUM_FILE" --clobber
+          else
+            gh release create "$TAG" "$ASSET" "$CHECKSUM_FILE" \
+              --title "SDR Lead Capture $VERSION" \
+              --notes "$NOTES"
+          fi

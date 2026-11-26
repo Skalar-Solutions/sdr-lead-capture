@@ -178,6 +178,7 @@ link-nya tidak lengkap).
 - Kode ada di `apps/extension` (WXT + React).
 - Kolom CSV diatur di `apps/extension/lib/csv-template.ts`.
 - Build: `pnpm install && pnpm build && pnpm zip`.
+- Release baru: naikkan versi di `apps/extension/package.json` + `wxt.config.ts`, commit, lalu buat tag `vX.Y.Z` dan push tag. Workflow `.github/workflows/release.yml` otomatis test, build, zip, dan attach zip ke GitHub Release.
 - Smoke test ke Google Maps asli: `pnpm build && pnpm smoke:maps`.
 - Store assets: `store/` (screenshot, promo, listing). Privacy page: `docs/privacy.html`.
 - Detail teknis, arsitektur, dan checklist serah terima ada di `HANDOVER.txt`.

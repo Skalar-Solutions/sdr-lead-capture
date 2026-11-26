@@ -1,7 +1,8 @@
 # Chrome Web Store Listing — SDR Lead Capture
 
-Status: aset siap. Yang masih perlu dilakukan hanya mengaktifkan GitHub Pages
-untuk URL privacy policy, lalu upload `release/sdr-lead-capture-csv-1.0.3-chrome.zip`.
+Status: opsional. Distribusi internal saat ini memakai zip dari GitHub Releases,
+bukan Chrome Web Store (butuh akun developer berbayar). Aset di bawah siap kalau
+nanti mau publish ke store.
 
 ## Name
 
