@@ -20,6 +20,17 @@ export interface ResultLink {
 
 const RESULT_LINK_SELECTOR = "div[role='feed'] a.hfpxzc, div[role='feed'] a[href*='/maps/place/']";
 
+/**
+ * Google Maps menambahkan akhiran "·Link yang dikunjungi" (ID) atau "·Visited link" (EN)
+ * pada aria-label tempat yang pernah dibuka. Buang akhiran ini supaya nama tampil bersih
+ * dan pencocokan panel detail (`findPlacePanel`) tetap cocok.
+ */
+const VISITED_LINK_SUFFIX_RE = /\s*[·•|-]\s*(?:link yang dikunjungi|visited link)\s*$/i;
+
+export function cleanResultLabel(label: string | null | undefined): string {
+  return cleanText(label).replace(VISITED_LINK_SUFFIX_RE, "").trim();
+}
+
 export function findFeed(root: ParentNode = document): HTMLElement | null {
   return root.querySelector<HTMLElement>("div[role='feed']");
 }
@@ -37,7 +48,7 @@ export function collectResultLinks(root: ParentNode = document): ResultLink[] {
     if (seen.has(key)) continue;
     seen.add(key);
 
-    const name = cleanText(anchor.getAttribute("aria-label")) || getNameFromUrl(href);
+    const name = cleanResultLabel(anchor.getAttribute("aria-label")) || getNameFromUrl(href);
     if (!name) continue;
     links.push({ name, href, placeId });
   }
@@ -110,7 +121,9 @@ function findAnchor(link: ResultLink): HTMLAnchorElement | null {
     anchors.find((anchor) => link.placeId && placeIdFromUrl(anchor.href) === link.placeId) ??
     anchors.find((anchor) => anchor.href === link.href) ??
     anchors.find(
-      (anchor) => normalizeName(anchor.getAttribute("aria-label")) === normalizeName(link.name),
+      (anchor) =>
+        normalizeName(cleanResultLabel(anchor.getAttribute("aria-label"))) ===
+        normalizeName(link.name),
     ) ??
     null
   );

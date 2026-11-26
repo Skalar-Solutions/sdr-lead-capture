@@ -1,7 +1,7 @@
 import { Window } from "happy-dom";
 import { describe, expect, it } from "vitest";
 
-import { collectResultLinks, findFeed, isEndOfList } from "./bulk";
+import { cleanResultLabel, collectResultLinks, findFeed, isEndOfList } from "./bulk";
 
 function parse(html: string): HTMLElement {
   const window = new Window();
@@ -42,6 +42,24 @@ describe("bulk helpers", () => {
     const links = collectResultLinks(parse(SEARCH_HTML));
     expect(links.map((link) => link.name)).toEqual(["Kopi Cipete Satu", "Kopi Cipete Dua"]);
     expect(links.map((link) => link.placeId)).toEqual(["0x1:0xa1", "0x1:0xa2"]);
+  });
+
+  it("membuang akhiran 'Link yang dikunjungi' / 'Visited link' dari aria-label", () => {
+    expect(cleanResultLabel("Trace Roasting Co.·Link yang dikunjungi")).toBe("Trace Roasting Co.");
+    expect(cleanResultLabel("Jemari Co. - Coffee & Donuts · Link yang dikunjungi")).toBe(
+      "Jemari Co. - Coffee & Donuts",
+    );
+    expect(cleanResultLabel("Kopi Toko Djawa (Setiabudi)·Visited link")).toBe(
+      "Kopi Toko Djawa (Setiabudi)",
+    );
+
+    const visitedDoc = parse(`
+      <div role="feed">
+        <a class="hfpxzc" aria-label="Trace Roasting Co.·Link yang dikunjungi"
+          href="https://www.google.com/maps/place/Trace/data=!4m7!3m6!1s0x1:0xb1!8m2">Trace</a>
+      </div>
+    `);
+    expect(collectResultLinks(visitedDoc).map((link) => link.name)).toEqual(["Trace Roasting Co."]);
   });
 
   it("mengenali akhir daftar", () => {
