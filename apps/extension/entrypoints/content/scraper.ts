@@ -5,6 +5,8 @@
  * (tanpa harus buka Google Maps beneran).
  */
 
+import { digitsOnly } from "@sdr/core";
+
 export interface ScrapedPlace {
   companyName: string;
   category: string;
@@ -199,6 +201,9 @@ export function extractBusinessData(root: ParentNode, url: string): ScrapedPlace
       }
     }
   }
+
+  // Simpan nomor telepon sebagai angka murni tanpa spasi/tanda baca.
+  data.phone = digitsOnly(data.phone);
 
   // Website / link sosial.
   let rawWebsiteUrl = "";

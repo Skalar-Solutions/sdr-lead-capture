@@ -1,5 +1,46 @@
 import type { ScrapedPlace } from "@/entrypoints/content/scraper";
 
+export type WebsiteStatus = "none" | "outdated" | "bad-ux" | "decent";
+
+export const WEBSITE_STATUS_OPTIONS: readonly { id: WebsiteStatus; label: string }[] = [
+  { id: "none", label: "Tidak Ada" },
+  { id: "outdated", label: "Outdated" },
+  { id: "bad-ux", label: "Bad UX" },
+  { id: "decent", label: "Lumayan" },
+] as const;
+
+export const DIGITAL_GAP_OPTIONS = [
+  { id: "no_website", label: "Tanpa Website" },
+  { id: "not_mobile_friendly", label: "Not Mobile-Friendly" },
+  { id: "no_online_ordering", label: "No Online Order" },
+  { id: "social_media_only", label: "Sosmed Only" },
+  { id: "no_seo", label: "No SEO" },
+  { id: "no_online_payment", label: "No Payment" },
+] as const;
+
+export const SERVICE_OPTIONS = [
+  { id: "website_dev", label: "Web Dev" },
+  { id: "ecommerce", label: "E-Commerce" },
+  { id: "uiux_redesign", label: "Redesign" },
+  { id: "mobile_app", label: "Mobile App" },
+  { id: "custom_software", label: "Custom SW" },
+  { id: "seo", label: "SEO" },
+] as const;
+
+const VALID_WEBSITE_STATUSES = new Set<WebsiteStatus>(["none", "outdated", "bad-ux", "decent"]);
+
+export function websiteStatusLabel(status: WebsiteStatus): string {
+  return WEBSITE_STATUS_OPTIONS.find((item) => item.id === status)?.label ?? status;
+}
+
+export function digitalGapLabel(id: string): string {
+  return DIGITAL_GAP_OPTIONS.find((item) => item.id === id)?.label ?? id.replace(/_/g, " ");
+}
+
+export function serviceLabel(id: string): string {
+  return SERVICE_OPTIONS.find((item) => item.id === id)?.label ?? id.replace(/_/g, " ");
+}
+
 export interface Capture {
   id: string;
   capturedAt: string;
@@ -15,9 +56,29 @@ export interface Capture {
   reviewsCount: string;
   mapsUrl: string;
   isSocialMediaOnly: boolean;
+
+  // SDR Evaluation & Tagging
+  websiteStatus: WebsiteStatus;
+  digitalGaps: string[];
+  services: string[];
+  priority: number;
+  picName?: string;
+  picRole?: string;
+  notes?: string;
+  whatsapp?: string;
+}
+
+function defaultDigitalGaps(hasWebsite: boolean, isSocialMediaOnly: boolean): string[] {
+  const gaps: string[] = [];
+  if (!hasWebsite) gaps.push("no_website");
+  if (isSocialMediaOnly) gaps.push("social_media_only");
+  return gaps;
 }
 
 export function toCapture(place: ScrapedPlace): Capture {
+  const hasWebsite = place.isRealWebsite && place.website.trim() !== "";
+  const websiteStatus: WebsiteStatus = hasWebsite ? "decent" : "none";
+
   return {
     id: crypto.randomUUID(),
     capturedAt: new Date().toISOString(),
@@ -33,24 +94,115 @@ export function toCapture(place: ScrapedPlace): Capture {
     reviewsCount: place.reviewsCount,
     mapsUrl: place.mapsUrl,
     isSocialMediaOnly: place.isSocialMediaOnly,
+
+    websiteStatus,
+    digitalGaps: defaultDigitalGaps(hasWebsite, place.isSocialMediaOnly),
+    services: ["website_dev"],
+    priority: hasWebsite ? 3 : 5,
+    picName: "",
+    picRole: "",
+    notes: place.isSocialMediaOnly
+      ? `Hanya ada link ${place.socialType}: ${place.socialUrl}`
+      : "",
+    whatsapp: place.phone,
   };
 }
 
-export function hasRealWebsite(capture: Capture): boolean {
-  return capture.website.trim() !== "";
+/**
+ * Normalisasi data capture dari chrome.storage.local agar record lama
+ * (sebelum fitur SDR tagging) tetap aman dibaca tanpa crash.
+ */
+export function normalizeCapture(raw: Partial<Capture> & Record<string, unknown>): Capture {
+  const website = typeof raw.website === "string" ? raw.website : "";
+  const isSocialMediaOnly = Boolean(raw.isSocialMediaOnly);
+  const phone = typeof raw.phone === "string" ? raw.phone : "";
+  const hasWebsite = website.trim() !== "" && !isSocialMediaOnly;
+
+  const websiteStatus: WebsiteStatus =
+    typeof raw.websiteStatus === "string" &&
+    VALID_WEBSITE_STATUSES.has(raw.websiteStatus as WebsiteStatus)
+      ? (raw.websiteStatus as WebsiteStatus)
+      : hasWebsite
+        ? "decent"
+        : "none";
+
+  const digitalGaps = Array.isArray(raw.digitalGaps)
+    ? raw.digitalGaps.filter((item): item is string => typeof item === "string")
+    : defaultDigitalGaps(hasWebsite, isSocialMediaOnly);
+
+  const services = Array.isArray(raw.services)
+    ? raw.services.filter((item): item is string => typeof item === "string")
+    : ["website_dev"];
+
+  const priority =
+    typeof raw.priority === "number" && Number.isFinite(raw.priority) && raw.priority >= 1 && raw.priority <= 5
+      ? Math.round(raw.priority)
+      : hasWebsite
+        ? 3
+        : 5;
+
+  const whatsapp =
+    typeof raw.whatsapp === "string" && raw.whatsapp.trim() !== "" ? raw.whatsapp : phone;
+
+  return {
+    id: typeof raw.id === "string" && raw.id ? raw.id : crypto.randomUUID(),
+    capturedAt:
+      typeof raw.capturedAt === "string" && raw.capturedAt
+        ? raw.capturedAt
+        : new Date().toISOString(),
+    companyName: typeof raw.companyName === "string" ? raw.companyName : "",
+    category: typeof raw.category === "string" ? raw.category : "",
+    address: typeof raw.address === "string" ? raw.address : "",
+    phone,
+    website,
+    socialType: typeof raw.socialType === "string" ? raw.socialType : null,
+    socialUrl: typeof raw.socialUrl === "string" ? raw.socialUrl : "",
+    instagram: typeof raw.instagram === "string" ? raw.instagram : "",
+    rating: typeof raw.rating === "string" ? raw.rating : "",
+    reviewsCount: typeof raw.reviewsCount === "string" ? raw.reviewsCount : "",
+    mapsUrl: typeof raw.mapsUrl === "string" ? raw.mapsUrl : "",
+    isSocialMediaOnly,
+    websiteStatus,
+    digitalGaps,
+    services,
+    priority,
+    picName: typeof raw.picName === "string" ? raw.picName : "",
+    picRole: typeof raw.picRole === "string" ? raw.picRole : "",
+    notes: typeof raw.notes === "string" ? raw.notes : "",
+    whatsapp,
+  };
+}
+
+export function hasRealWebsite(
+  capture: Pick<Capture, "website" | "isSocialMediaOnly" | "websiteStatus">,
+): boolean {
+  return (
+    capture.website.trim() !== "" &&
+    !capture.isSocialMediaOnly &&
+    capture.websiteStatus !== "none"
+  );
+}
+
+export function hasAnyContact(
+  capture: Pick<Capture, "phone" | "whatsapp" | "instagram" | "socialUrl" | "website">,
+): boolean {
+  return Boolean(
+    capture.phone.trim() ||
+      capture.whatsapp?.trim() ||
+      capture.instagram.trim() ||
+      capture.socialUrl.trim() ||
+      capture.website.trim(),
+  );
 }
 
 /**
- * Minimal satu sinyal bisnis selain nama. Mencegah baris sampah (mis. heading
- * "Hasil" dari halaman pencarian) ikut tersimpan.
+ * Wajib punya nama bisnis dan minimal satu kontak (telepon, WA, IG/sosmed,
+ * atau website). Bisnis tanpa kontak sama sekali tidak di-scrape/disimpan.
  */
 export function isCaptureUseful(
-  capture: Pick<Capture, "companyName" | "category" | "address" | "phone" | "website" | "socialUrl">,
+  capture: Pick<Capture, "companyName" | "phone" | "whatsapp" | "instagram" | "socialUrl" | "website">,
 ): boolean {
-  return Boolean(
-    capture.companyName.trim() &&
-      (capture.category || capture.address || capture.phone || capture.website || capture.socialUrl),
-  );
+  return Boolean(capture.companyName.trim() && hasAnyContact(capture));
 }
 
 const PLACE_ID_RE = /!1s(0x[0-9a-f]+:0x[0-9a-f]+)/i;

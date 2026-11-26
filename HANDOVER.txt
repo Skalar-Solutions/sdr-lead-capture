@@ -1,7 +1,7 @@
 ================================================================================
 HANDOVER - SDR LEAD CAPTURE (CSV EDITION)
 Tanggal : 26 November 2026
-Versi   : 1.0.5
+Versi   : 1.0.6
 Bentuk  : extension Chrome mandiri (tanpa backend)
 Repo    : /Users/bytedance/Vano/Code/sdr-lead-capture (branch: main)
 ================================================================================
@@ -19,15 +19,15 @@ FILE RILIS
 ----------
 Zip siap upload / share:
 
-  release/sdr-lead-capture-1.0.5-chrome.zip   (334 KB)
+  release/sdr-lead-capture-1.0.6-chrome.zip
 
 Download internal:
 
-  https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.5
+  https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.6
 
 Folder unpacked untuk internal:
 
-  release/sdr-lead-capture-1.0.5/
+  release/sdr-lead-capture-1.0.6/
 
 Cara pakai zip:
   A. Distribusi internal: download dari GitHub Releases.
@@ -93,8 +93,22 @@ Semua kolom diatur di array CSV_COLUMNS. Setiap item punya:
   { header: "Nama Kolom", value: (capture) => "nilai" }
 
 Field yang tersedia di setiap Capture:
-  capturedAt, companyName, category, address, phone, website, socialType,
-  socialUrl, instagram, rating, reviewsCount, mapsUrl, isSocialMediaOnly
+  capturedAt, companyName, category, address, phone (digits only), website,
+  socialType, socialUrl, instagram, rating, reviewsCount, mapsUrl,
+  isSocialMediaOnly, websiteStatus, digitalGaps, services, priority,
+  picName, picRole, notes, whatsapp
+
+Catatan migrasi & filter:
+- readCaptures() otomatis menormalisasi record lama (sebelum 1.0.6) lewat
+  normalizeCapture() sehingga field tagging selalu terisi aman tanpa crash.
+- Nomor telepon dinormalisasi menjadi angka murni (digitsOnly).
+- Bisnis tanpa kontak sama sekali (phone, whatsapp, instagram, socialUrl, dan
+  website kosong semua) dilewati (isCaptureUseful -> hasAnyContact). Selama ada
+  salah satu kontaknya, tetap di-scrape.
+
+Dua format CSV yang didukung:
+1. CRM_COLUMNS (13 kolom, crm-contact-YYYY-MM-DD.csv)
+2. SDR_DETAILED_COLUMNS (21 kolom, sdr-leads-lengkap-YYYY-MM-DD.csv)
 
 Kolom CSV mengikuti crm-contact-template.xlsx (13 kolom, urutan sama):
 
@@ -166,9 +180,11 @@ PERMISSION EXTENSION
 
 SUDAH DIVERIFIKASI
 ------------------
-- 40 tes core + 34 tes extension (scraper, dedupe, bulk helper), semua hijau.
-- Typecheck bersih.
-- Build produksi bersih (~904 KB) + zip 334 KB.
+- 40 tes core + 45 tes extension (scraper, capture/migrasi/tagging, csv-template, bulk) + 4 tes api, semua hijau.
+- Typecheck bersih di semua workspace package.
+- Build produksi bersih (~930 KB).
+- E2E Chromium headless: single capture + edit tagging + simpan, auto-detect, bulk scrape 3 lead + skip tanpa telepon + dedupe, dashboard menampilkan tagging, export CSV CRM (13 kolom) & CSV SDR Lengkap (21 kolom).
+- Smoke test Google Maps ASLI (pnpm smoke:maps): lolos (telepon angka murni, dedupe ok).
 - CI GitHub Actions: test + typecheck + build + zip (artifact).
 - E2E Chromium headless:
     popup render

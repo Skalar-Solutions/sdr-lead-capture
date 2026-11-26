@@ -21,13 +21,33 @@ import {
   TableHeader,
   TableRow,
 } from "@sdr/ui/components/ui/table";
-import { Download, ExternalLink, Flame, RefreshCw, Search, Trash2 } from "lucide-react";
-import { useDeferredValue, useEffect, useState } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Download,
+  ExternalLink,
+  Flame,
+  RefreshCw,
+  Search,
+  Star,
+  Trash2,
+} from "lucide-react";
+import { Fragment, useDeferredValue, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { browser } from "wxt/browser";
 
-import { hasRealWebsite, type Capture } from "@/lib/capture";
-import { buildCsvFilename, capturesToCsv } from "@/lib/csv-template";
+import {
+  digitalGapLabel,
+  hasRealWebsite,
+  serviceLabel,
+  websiteStatusLabel,
+  type Capture,
+} from "@/lib/capture";
+import {
+  buildCsvFilename,
+  capturesToCsv,
+  capturesToDetailedCsv,
+} from "@/lib/csv-template";
 import { downloadCsvFile } from "@/lib/download";
 import { readCaptures, writeCaptures } from "@/lib/store";
 
@@ -45,9 +65,21 @@ function formatDate(value: string): string {
 
 function matchesQuery(capture: Capture, query: string): boolean {
   if (!query) return true;
-  return [capture.companyName, capture.category, capture.address, capture.phone]
+  return [
+    capture.companyName,
+    capture.category,
+    capture.address,
+    capture.phone,
+    capture.websiteStatus,
+    websiteStatusLabel(capture.websiteStatus),
+    capture.picName,
+    capture.picRole,
+    capture.notes,
+    ...(capture.digitalGaps ?? []),
+    ...(capture.services ?? []),
+  ]
     .filter(Boolean)
-    .some((value) => value.toLowerCase().includes(query));
+    .some((value) => value!.toLowerCase().includes(query));
 }
 
 export default function DashboardApp() {
@@ -56,6 +88,7 @@ export default function DashboardApp() {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
   const [page, setPage] = useState(0);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Capture | null>(null);
   const [clearOpen, setClearOpen] = useState(false);
 
@@ -95,13 +128,22 @@ export default function DashboardApp() {
     socialOnly: captures.filter((capture) => capture.socialType !== null).length,
   };
 
-  function handleExport() {
+  function handleExportCrm() {
     if (filtered.length === 0) {
       toast.error("Belum ada data untuk diekspor");
       return;
     }
-    downloadCsvFile(capturesToCsv(filtered), buildCsvFilename());
-    toast.success(`${filtered.length} lead di-download (CSV)`);
+    downloadCsvFile(capturesToCsv(filtered), buildCsvFilename("crm"));
+    toast.success(`${filtered.length} lead di-download (CSV CRM 13 kolom)`);
+  }
+
+  function handleExportDetailed() {
+    if (filtered.length === 0) {
+      toast.error("Belum ada data untuk diekspor");
+      return;
+    }
+    downloadCsvFile(capturesToDetailedCsv(filtered), buildCsvFilename("detailed"));
+    toast.success(`${filtered.length} lead di-download (CSV SDR lengkap)`);
   }
 
   async function handleDelete() {
@@ -127,10 +169,10 @@ export default function DashboardApp() {
           <div>
             <h1 className="text-lg font-semibold tracking-tight">Data Lead</h1>
             <p className="text-xs text-muted-foreground">
-              Semua lead tersimpan di browser ini. Download CSV kalau sudah selesai.
+              Semua lead tersimpan di browser ini. Pilih format CSV CRM atau CSV SDR lengkap.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -151,9 +193,13 @@ export default function DashboardApp() {
               <Trash2 className="size-4" />
               Hapus semua
             </Button>
-            <Button size="sm" onClick={handleExport}>
+            <Button variant="outline" size="sm" onClick={handleExportCrm}>
               <Download className="size-4" />
-              Download CSV
+              CSV CRM
+            </Button>
+            <Button size="sm" onClick={handleExportDetailed}>
+              <Download className="size-4" />
+              CSV SDR Lengkap
             </Button>
           </div>
         </header>
@@ -203,7 +249,7 @@ export default function DashboardApp() {
         </div>
 
         <p className="px-1 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 rounded-sm bg-signal px-1.5 py-0.5 text-[11px] font-semibold text-signal-foreground">
+          <span className="inline-flex items-center gap-1 rounded-sm bg-signal px-1.5 py-0.5 text-xs font-semibold text-signal-foreground">
             <Flame className="size-3" /> HOT
           </span>{" "}
           = belum punya website. Biasanya prospek yang cocok ditawari website.
@@ -216,7 +262,7 @@ export default function DashboardApp() {
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Cari nama, kategori, alamat, telepon..."
+                placeholder="Cari nama, kategori, telepon, status, PIC, atau catatan..."
                 className="pl-8"
               />
             </div>
@@ -228,19 +274,21 @@ export default function DashboardApp() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[120px]">Disimpan</TableHead>
+                <TableHead className="w-[36px]" />
+                <TableHead className="w-[116px]">Disimpan</TableHead>
                 <TableHead>Nama bisnis</TableHead>
+                <TableHead>Status & Tagging</TableHead>
                 <TableHead>Kontak</TableHead>
-                <TableHead className="w-[220px]">Website / Sosmed</TableHead>
-                <TableHead className="w-[110px]">Rating</TableHead>
-                <TableHead className="w-[60px]" />
+                <TableHead className="w-[190px]">Website / Sosmed</TableHead>
+                <TableHead className="w-[170px]">Prioritas & PIC</TableHead>
+                <TableHead className="w-[52px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading
                 ? Array.from({ length: 4 }).map((_, index) => (
                     <TableRow key={`skeleton-${index}`}>
-                      <TableCell colSpan={6}>
+                      <TableCell colSpan={8}>
                         <Skeleton className="h-8 w-full" />
                       </TableCell>
                     </TableRow>
@@ -249,9 +297,11 @@ export default function DashboardApp() {
 
               {!loading && pageItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-xs text-muted-foreground">
+                  <TableCell colSpan={8} className="py-10 text-center text-xs text-muted-foreground">
                     <div className="flex flex-col items-center gap-2">
-                      <span>Belum ada lead. Buka Google Maps, cari bisnis, lalu klik salah satu hasilnya.</span>
+                      <span>
+                        Belum ada lead. Buka Google Maps, cari bisnis, lalu klik salah satu hasilnya.
+                      </span>
                       <Button
                         size="sm"
                         variant="outline"
@@ -266,80 +316,190 @@ export default function DashboardApp() {
                 </TableRow>
               ) : null}
 
-              {pageItems.map((capture) => (
-                <TableRow key={capture.id}>
-                  <TableCell className="align-top text-xs text-muted-foreground">
-                    {formatDate(capture.capturedAt)}
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{capture.companyName || "(tanpa nama)"}</span>
-                      {!hasRealWebsite(capture) ? (
-                        <Badge
-                          variant="signal"
-                          className="gap-1"
-                          title="Belum punya website, biasanya cocok ditawari website"
+              {pageItems.map((capture) => {
+                const isExpanded = expandedId === capture.id;
+                return (
+                  <Fragment key={capture.id}>
+                    <TableRow>
+                      <TableCell className="align-top pr-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-7"
+                          aria-label={isExpanded ? "Tutup detail" : "Lihat detail"}
+                          onClick={() => setExpandedId(isExpanded ? null : capture.id)}
                         >
-                          <Flame className="size-3" /> HOT
-                        </Badge>
-                      ) : null}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{capture.category || "—"}</div>
-                  </TableCell>
-                  <TableCell className="align-top text-xs">
-                    <div className="font-medium">{capture.phone || "—"}</div>
-                    <div className="mt-1 max-w-[260px] truncate text-muted-foreground">
-                      {capture.address || "—"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="align-top text-xs">
-                    {capture.website ? (
-                      <a
-                        href={capture.website}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 break-all text-foreground underline-offset-2 hover:underline"
-                      >
-                        {capture.website}
-                        <ExternalLink className="size-3 shrink-0" />
-                      </a>
-                    ) : capture.socialUrl ? (
-                      <div className="space-y-1">
-                        <Badge variant="outline">{capture.socialType}</Badge>
-                        <a
-                          href={capture.socialUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block break-all text-foreground underline-offset-2 hover:underline"
+                          {isExpanded ? (
+                            <ChevronDown className="size-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="size-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </TableCell>
+                      <TableCell className="align-top text-xs text-muted-foreground">
+                        {formatDate(capture.capturedAt)}
+                      </TableCell>
+                      <TableCell className="align-top">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-sm font-medium">
+                            {capture.companyName || "(tanpa nama)"}
+                          </span>
+                          {!hasRealWebsite(capture) ? (
+                            <Badge
+                              variant="signal"
+                              className="gap-1"
+                              title="Belum punya website, biasanya cocok ditawari website"
+                            >
+                              <Flame className="size-3" /> HOT
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {[capture.category || "—", capture.rating ? `Rating ${capture.rating}` : ""]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </div>
+                      </TableCell>
+                      <TableCell className="align-top text-xs">
+                        <div className="mb-1 flex flex-wrap items-center gap-1">
+                          <Badge variant="outline">{websiteStatusLabel(capture.websiteStatus)}</Badge>
+                        </div>
+                        {capture.digitalGaps.length > 0 ? (
+                          <div className="flex max-w-[220px] flex-wrap gap-1">
+                            {capture.digitalGaps.map((gap) => (
+                              <span
+                                key={gap}
+                                className="rounded-sm border border-border bg-muted px-1.5 py-0.5 text-xs text-foreground"
+                              >
+                                {digitalGapLabel(gap)}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                        {capture.services.length > 0 ? (
+                          <div className="mt-1 flex max-w-[220px] flex-wrap gap-1">
+                            {capture.services.map((service) => (
+                              <span
+                                key={service}
+                                className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-xs text-muted-foreground"
+                              >
+                                {serviceLabel(service)}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="align-top text-xs">
+                        <div className="font-medium">{capture.phone || "—"}</div>
+                        <div className="mt-1 max-w-[200px] truncate text-muted-foreground">
+                          {capture.address || "—"}
+                        </div>
+                      </TableCell>
+                      <TableCell className="align-top text-xs">
+                        {capture.website ? (
+                          <a
+                            href={capture.website}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 break-all text-foreground underline-offset-2 hover:underline"
+                          >
+                            {capture.website}
+                            <ExternalLink className="size-3 shrink-0" />
+                          </a>
+                        ) : capture.socialUrl ? (
+                          <div className="space-y-1">
+                            <Badge variant="outline">{capture.socialType}</Badge>
+                            <a
+                              href={capture.socialUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block break-all text-foreground underline-offset-2 hover:underline"
+                            >
+                              {capture.socialUrl}
+                            </a>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">Tidak ada</span>
+                        )}
+                        {capture.instagram ? (
+                          <div className="mt-1 text-muted-foreground">{capture.instagram}</div>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="align-top text-xs">
+                        <div className="flex items-center gap-1 font-medium text-foreground">
+                          <Star className="size-3.5 fill-foreground text-foreground" />
+                          <span>P{capture.priority}</span>
+                        </div>
+                        {capture.picName ? (
+                          <div className="mt-1 font-medium">
+                            {capture.picName}
+                            {capture.picRole ? ` (${capture.picRole})` : ""}
+                          </div>
+                        ) : null}
+                        {capture.notes ? (
+                          <div className="mt-0.5 line-clamp-2 max-w-[170px] text-muted-foreground">
+                            {capture.notes}
+                          </div>
+                        ) : !capture.picName ? (
+                          <div className="mt-1 text-muted-foreground">—</div>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="align-top">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Hapus lead"
+                          onClick={() => setDeleteTarget(capture)}
                         >
-                          {capture.socialUrl}
-                        </a>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">Tidak ada</span>
-                    )}
-                    {capture.instagram ? (
-                      <div className="mt-1 text-muted-foreground">{capture.instagram}</div>
+                          <Trash2 className="size-4 text-muted-foreground transition-colors hover:text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+
+                    {isExpanded ? (
+                      <TableRow className="bg-muted/40">
+                        <TableCell colSpan={8} className="px-6 py-3 text-xs">
+                          <div className="grid gap-3 md:grid-cols-3">
+                            <div className="space-y-1">
+                              <div className="font-medium text-muted-foreground">Alamat & WhatsApp</div>
+                              <div>{capture.address || "—"}</div>
+                              <div className="text-muted-foreground">
+                                WA: {capture.whatsapp || capture.phone || "—"}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="font-medium text-muted-foreground">PIC & Catatan Sales</div>
+                              <div>
+                                {capture.picName
+                                  ? `${capture.picName}${capture.picRole ? ` · ${capture.picRole}` : ""}`
+                                  : "Belum ada PIC"}
+                              </div>
+                              <div className="text-muted-foreground">
+                                {capture.notes || "Belum ada catatan"}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="font-medium text-muted-foreground">Link Google Maps</div>
+                              {capture.mapsUrl ? (
+                                <a
+                                  href={capture.mapsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 break-all text-foreground underline-offset-2 hover:underline"
+                                >
+                                  Buka di Maps <ExternalLink className="size-3 shrink-0" />
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     ) : null}
-                  </TableCell>
-                  <TableCell className="align-top text-xs">
-                    {capture.rating || "—"}
-                    {capture.reviewsCount ? (
-                      <div className="text-muted-foreground">({capture.reviewsCount})</div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Hapus lead"
-                      onClick={() => setDeleteTarget(capture)}
-                    >
-                      <Trash2 className="size-4 text-muted-foreground transition-colors hover:text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                  </Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         </Card>

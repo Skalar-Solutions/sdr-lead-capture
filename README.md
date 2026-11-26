@@ -16,20 +16,25 @@ pun** — semuanya tersimpan di Chrome di komputer kamu.
 
 ## Yang kamu dapat
 
-Satu file CSV dengan 13 kolom, persis seperti template CRM:
+Dua format file CSV yang bisa dipilih dari halaman **Data Lead**:
+
+1. **CSV CRM** (`crm-contact-YYYY-MM-DD.csv`) — 13 kolom, persis seperti template CRM:
 
 `*Nama`, `Sapaan`, `URL Foto`, `*Tipe Kontak`, `Grup Kontak`, `Perusahaan`,
 `Alamat Penagihan`, `Negara`, `Provinsi`, `Kota`, `Email`, `Nomor Telepon`,
 `Tanggal Lahir (dd/mm/yyyy)`
+
+2. **CSV SDR Lengkap** (`sdr-leads-lengkap-YYYY-MM-DD.csv`) — 21 kolom berisi data Maps + evaluasi SDR (Status Website, HOT Lead, Celah Digital, Peluang Solusi, Prioritas, PIC Nama/Jabatan, Catatan Sales, WhatsApp, dan Link Google Maps).
 
 Yang otomatis terisi dari Google Maps:
 
 - Nama bisnis
 - Kategori (mis. Steakhouse, Klinik, Salon)
 - Alamat lengkap
-- Nomor telepon
+- Nomor telepon (angka murni tanpa spasi/tanda hubung; bisnis tanpa kontak sama sekali — telepon/WA/IG/sosmed/website kosong semua — dilewati)
 - Negara: Indonesia
 - Tipe kontak: Vendor
+- Tagging default (Status Website, Celah Digital, Peluang Solusi, Prioritas) yang bisa diedit sebelum disimpan
 
 Sisanya dibiarkan kosong karena memang tidak ada di Google Maps.
 
@@ -41,9 +46,9 @@ Sisanya dibiarkan kosong karena memang tidak ada di Google Maps.
 
 Saat ini extension dipasang manual (belum di Chrome Web Store).
 
-1. Minta file **`sdr-lead-capture-1.0.5-chrome.zip`** ke yang mengirim ini,
+1. Minta file **`sdr-lead-capture-1.0.6-chrome.zip`** ke yang mengirim ini,
    atau download dari
-   [GitHub Releases](https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.5).
+   [GitHub Releases](https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.6).
 2. **Extract** file zip itu ke folder yang gampang diingat, misalnya
    `Dokumen/SDR Lead Capture`.
    Penting: jangan hapus folder ini setelah dipasang.

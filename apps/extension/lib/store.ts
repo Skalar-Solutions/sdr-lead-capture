@@ -1,6 +1,6 @@
 import { browser } from "wxt/browser";
 
-import { isDuplicateCapture, type Capture } from "./capture";
+import { isDuplicateCapture, normalizeCapture, type Capture } from "./capture";
 
 const CAPTURES_KEY = "sdr_captures";
 
@@ -15,7 +15,10 @@ export interface AddCaptureResult {
 export async function readCaptures(): Promise<Capture[]> {
   const stored = await browser.storage.local.get(CAPTURES_KEY);
   const value = stored[CAPTURES_KEY];
-  return Array.isArray(value) ? (value as Capture[]) : [];
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+    .map((item) => normalizeCapture(item));
 }
 
 export async function writeCaptures(captures: Capture[]): Promise<void> {
