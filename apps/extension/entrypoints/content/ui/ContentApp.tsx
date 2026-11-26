@@ -28,6 +28,8 @@ export function ContentApp() {
   const scrape = useCallback(() => {
     const data = extractBusinessData(document, location.href);
     if (!data.companyName) {
+      setCapture(null);
+      setSaved(false);
       setNotice("Klik salah satu tempat di Maps dulu.");
       return;
     }

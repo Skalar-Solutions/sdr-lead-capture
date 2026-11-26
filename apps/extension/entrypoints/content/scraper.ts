@@ -51,8 +51,22 @@ export interface WebsiteAnalysis {
   instagramHandle: string;
 }
 
+/**
+ * Google Maps menyisipkan glyph Material Icons (Private Use Area, U+E000–U+F8FF)
+ * di dalam tombol seperti alamat dan telepon. Glyph itu bukan data bisnis dan
+ * harus dibuang supaya CSV tidak kotor.
+ */
+const ICON_GLYPH_RE = /[\uE000-\uF8FF]/g;
+
 export function cleanText(text: string | null | undefined): string {
-  return (text ?? "").trim().replace(/\s+/g, " ");
+  return (text ?? "").replace(ICON_GLYPH_RE, " ").replace(/\s+/g, " ").trim();
+}
+
+/** Heading umum Google Maps yang bukan nama bisnis. */
+const GENERIC_HEADINGS = new Set(["hasil", "hasil pencarian", "result", "results", "search results"]);
+
+export function isGenericHeading(value: string): boolean {
+  return GENERIC_HEADINGS.has(cleanText(value).toLowerCase());
 }
 
 export function analyzeWebsiteUrl(url: string): WebsiteAnalysis {
@@ -93,8 +107,14 @@ export function getNameFromUrl(url: string): string {
 function pickText(root: ParentNode, selectors: string[]): string {
   for (const selector of selectors) {
     const el = root.querySelector(selector);
-    const text = cleanText(el?.textContent ?? el?.getAttribute("aria-label") ?? "");
+    if (!el) continue;
+
+    // Utamakan textContent, tapi kalau isinya cuma ikon, pakai aria-label.
+    const text = cleanText(el.textContent);
     if (text) return text;
+
+    const label = cleanText(el.getAttribute("aria-label"));
+    if (label) return label;
   }
   return "";
 }
@@ -129,9 +149,7 @@ export function extractBusinessData(root: ParentNode, url: string): ScrapedPlace
     companyName: pickText(root, [
       "h1.DUwDvf",
       "h1[class*='fontHeadlineLarge']",
-      "div[role='main'] h1",
       "div[role='heading'][aria-level='1']",
-      "h1",
     ]),
     category: pickText(root, [
       "button[jsaction*='pane.rating.category']",
@@ -164,7 +182,12 @@ export function extractBusinessData(root: ParentNode, url: string): ScrapedPlace
     mapsUrl: url,
   };
 
-  if (!data.companyName) data.companyName = getNameFromUrl(url);
+  // Kalau h1 yang terbaca ternyata heading umum ("Hasil"), jangan pernah
+  // menyimpannya sebagai nama bisnis. Pakai nama dari URL, atau kosongkan.
+  if (!data.companyName || isGenericHeading(data.companyName)) {
+    data.companyName = getNameFromUrl(url);
+  }
+  if (isGenericHeading(data.companyName)) data.companyName = "";
 
   // Fallback telepon: scan tombol di panel detail.
   if (!data.phone) {

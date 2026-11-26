@@ -70,6 +70,72 @@ describe("extractBusinessData", () => {
     expect(result.phone).toBe("");
     expect(result.website).toBe("");
   });
+
+  it("membuang glyph ikon Material dari alamat dan telepon", () => {
+    const doc = parse(`
+      <div role="main">
+        <h1 class="DUwDvf">Chuck's Cattle Benhil</h1>
+        <button data-item-id="address" aria-label="Alamat: Jl. Bendungan Hilir No.5">
+          <div><span class="google-symbols" aria-hidden="true">\uE0C8</span></div>
+          <div class="Io6YTE">Jl. Bendungan Hilir No.5</div>
+        </button>
+        <button data-item-id="phone:tel:+6282113425107" aria-label="Telepon: 0821-1342-5107">
+          <span class="google-symbols" aria-hidden="true">\uE0B0</span>0821-1342-5107
+        </button>
+      </div>
+    `);
+
+    const result = extractBusinessData(doc, MAPS_URL);
+
+    expect(result.address).toBe("Jl. Bendungan Hilir No.5");
+    expect(result.phone).toBe("0821-1342-5107");
+    expect(result.address).not.toMatch(/[\uE000-\uF8FF]/);
+    expect(result.phone).not.toMatch(/[\uE000-\uF8FF]/);
+  });
+
+  it("memakai aria-label kalau tombol hanya berisi ikon", () => {
+    const doc = parse(`
+      <div role="main">
+        <h1 class="DUwDvf">Klinik Sehat</h1>
+        <button data-item-id="address" aria-label="Alamat: Jl. Merdeka No. 1">
+          <span class="google-symbols" aria-hidden="true">\uE0C8</span>
+        </button>
+        <button data-item-id="phone:tel:+622112345678" aria-label="Telepon: 021-1234-5678">
+          <span class="google-symbols" aria-hidden="true">\uE0B0</span>
+        </button>
+      </div>
+    `);
+
+    const result = extractBusinessData(doc, MAPS_URL);
+
+    expect(result.address).toBe("Jl. Merdeka No. 1");
+    expect(result.phone).toBe("021-1234-5678");
+  });
+
+  it("tidak memakai heading 'Hasil' dari halaman pencarian sebagai nama bisnis", () => {
+    const doc = parse(`
+      <div role="main">
+        <h1 class="DUwDvf">Hasil</h1>
+        <a href="/maps/place/Chuck's+Cattle+Benhil">Chuck's Cattle Benhil</a>
+      </div>
+    `);
+
+    const result = extractBusinessData(
+      doc,
+      "https://www.google.com/maps/search/steakhouse+jakarta",
+    );
+
+    expect(result.companyName).toBe("");
+  });
+
+  it("memakai nama dari URL kalau h1 yang terbaca heading 'Hasil'", () => {
+    const doc = parse(`<div role="main"><h1 class="DUwDvf">Hasil</h1></div>`);
+    const result = extractBusinessData(
+      doc,
+      "https://www.google.com/maps/place/Chuck's+Cattle/@-6.2,106.8,17z",
+    );
+    expect(result.companyName).toBe("Chuck's Cattle");
+  });
 });
 
 describe("analyzeWebsiteUrl", () => {
