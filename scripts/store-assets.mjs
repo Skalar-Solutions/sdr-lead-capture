@@ -132,8 +132,17 @@ try {
   );
   await maps.locator("h1.DUwDvf").first().waitFor({ state: "visible", timeout: 30000 });
   await maps.locator("sdr-capture-ui").waitFor({ state: "attached", timeout: 15000 });
-  await maps.getByRole("button", { name: /SDR Capture/ }).click();
-  await maps.getByRole("button", { name: /Simpan ke CSV/ }).waitFor({ timeout: 15000 });
+  const saveButton = maps.getByRole("button", { name: /Simpan ke CSV/ });
+  const capturePill = maps.getByRole("button", { name: /SDR Capture/ });
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (await saveButton.isVisible().catch(() => false)) break;
+    if (await capturePill.isVisible().catch(() => false)) {
+      await capturePill.click();
+      break;
+    }
+    await maps.waitForTimeout(400);
+  }
+  await saveButton.waitFor({ timeout: 15000 });
   await maps.evaluate(() => {
     const button = document.querySelector('button[aria-label="Ciutkan panel samping"]');
     if (button instanceof HTMLElement) {
@@ -156,6 +165,7 @@ try {
 const iconSvg = fs
   .readFileSync(path.join(root, "apps/extension/public/icon.svg"), "utf8")
   .replace(/<rect[^>]*\/>\s*/g, "")
+  .replace(/\s(width|height)="[^"]*"/g, "")
   .replace("<svg ", '<svg width="72" height="72" ');
 const fontBase64 = fs.readFileSync(fontPath).toString("base64");
 

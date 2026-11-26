@@ -38,9 +38,9 @@ Sisanya dibiarkan kosong karena memang tidak ada di Google Maps.
 
 Saat ini extension dipasang manual (belum di Chrome Web Store).
 
-1. Minta file **`sdr-lead-capture-1.0.3-chrome.zip`** ke yang mengirim ini,
+1. Minta file **`sdr-lead-capture-1.0.4-chrome.zip`** ke yang mengirim ini,
    atau download dari
-   [GitHub Releases](https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.3).
+   [GitHub Releases](https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.4).
 2. **Extract** file zip itu ke folder yang gampang diingat, misalnya
    `Dokumen/SDR Lead Capture`.
    Penting: jangan hapus folder ini setelah dipasang.
@@ -61,15 +61,31 @@ Kalau nanti extension sudah ada di Chrome Web Store, cara pasangnya cukup klik
 1. Buka **Google Maps** (`google.com/maps`).
 2. Cari bisnis, misalnya `steakhouse jakarta`.
 3. **Klik satu tempat** sampai panel detailnya terbuka di sebelah kiri.
+   Kotak capture akan terbuka otomatis dengan data tempat tersebut.
    (Kalau cuma di-hover, data belum terbaca.)
-4. Klik ikon **SDR Lead Capture** di toolbar — atau klik tombol bulat
-   **SDR Capture** di kanan bawah halaman Maps.
-5. Akan muncul ringkasan data bisnis tersebut. Periksa sebentar.
+4. Kalau kotak tidak muncul, klik tombol bulat **SDR Capture** di kanan bawah
+   halaman Maps.
+5. Periksa ringkasan data bisnis tersebut.
 6. Klik **Simpan ke CSV**.
 7. Ulangi untuk bisnis berikutnya.
 8. Kalau sudah selesai, klik **Download CSV**.
 
 File CSV akan masuk ke folder **Downloads** komputer kamu.
+
+### Scrape banyak sekaligus
+
+1. Di halaman **hasil pencarian** (bukan panel detail satu tempat), pastikan
+   daftar bisnis muncul di panel kiri.
+2. Klik **Scrape Semua** di kanan bawah.
+3. Pilih batas jumlah (20/50/100), lalu klik **Mulai Scrape**.
+4. Extension membuka tiap tempat di daftar, mengambil datanya, lalu menampilkan
+   checklist. Tempat yang sudah pernah disimpan otomatis ditandai.
+5. Centang yang mau disimpan, lalu klik **Simpan ke CSV**.
+
+Biarkan tab Maps tetap aktif dan jangan klik apa pun selama proses berjalan.
+Proses ini memakai jeda acak dan batas jumlah supaya tidak terlalu agresif.
+Kalau perlu berhenti, klik **Berhenti** — hasil yang sudah terbaca tetap bisa
+disimpan.
 
 ---
 
@@ -131,6 +147,8 @@ Data ini tersimpan di Chrome. Kalau extension di-uninstall, datanya ikut hilang.
 |---|---|
 | Tombol SDR Capture tidak muncul | Pastikan sedang di `google.com/maps`, lalu refresh halaman (F5) |
 | Data yang muncul kosong | Klik dulu salah satu tempat sampai panel detail terbuka, lalu klik tombol refresh ↻ di kotak capture |
+| Tombol "Scrape Semua" tidak muncul | Pastikan sedang di halaman hasil pencarian dan daftar bisnis terlihat di panel kiri, lalu refresh tab |
+| Bulk scrape berhenti di tengah | Google Maps mungkin membatasi. Coba jumlah lebih kecil, jeda sebentar, lalu ulangi |
 | Tombol "Simpan ke CSV" tidak bereaksi | Tutup popup, buka lagi, coba simpan sekali lagi |
 | CSV kosong | Pastikan sudah klik "Simpan ke CSV", bukan cuma melihat ringkasan |
 | Extension hilang setelah update Chrome | Buka `chrome://extensions` → Load unpacked → pilih folder extension lagi |
@@ -152,7 +170,10 @@ Kebijakan privasi lengkap ada di [`PRIVACY.md`](PRIVACY.md).
 ## Pertanyaan yang sering muncul
 
 **Bisa ambil banyak bisnis sekaligus otomatis?**
-Belum. Saat ini satu per satu. Ini juga lebih aman terhadap aturan Google Maps.
+Bisa. Buka halaman hasil pencarian di Maps, klik **Scrape Semua**, pilih batas
+jumlah, lalu klik **Mulai Scrape**. Extension akan membuka tiap tempat satu per
+satu dan menampilkan checklist sebelum disimpan. Tetap pakai jumlah wajar dan
+jangan jalankan terlalu agresif.
 
 **Bisa dipakai di HP?**
 Belum. Hanya di Chrome desktop (Windows/Mac/Linux).
