@@ -49,3 +49,5 @@ jobs:
           name: sdr-lead-capture-chrome
           path: apps/extension/.output/*.zip
           if-no-files-found: error
+          # .output adalah folder hidden, jadi harus di-include eksplisit.
+          include-hidden-files: true
