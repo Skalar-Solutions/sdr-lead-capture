@@ -38,7 +38,7 @@ Sisanya dibiarkan kosong karena memang tidak ada di Google Maps.
 
 Saat ini extension dipasang manual (belum di Chrome Web Store).
 
-1. Minta file **`sdr-lead-capture-csv-1.0.2-chrome.zip`** ke yang mengirim ini.
+1. Minta file **`sdr-lead-capture-csv-1.0.3-chrome.zip`** ke yang mengirim ini.
 2. **Extract** file zip itu ke folder yang gampang diingat, misalnya
    `Dokumen/SDR Lead Capture`.
    Penting: jangan hapus folder ini setelah dipasang.
@@ -177,4 +177,5 @@ link-nya tidak lengkap).
 - Kolom CSV diatur di `apps/extension/lib/csv-template.ts`.
 - Build: `pnpm install && pnpm build && pnpm zip`.
 - Smoke test ke Google Maps asli: `pnpm build && pnpm smoke:maps`.
+- Store assets: `store/` (screenshot, promo, listing). Privacy page: `docs/privacy.html`.
 - Detail teknis, arsitektur, dan checklist serah terima ada di `HANDOVER.txt`.

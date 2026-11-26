@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SDR Lead Capture</title>
+    <style>
+      :root { --bg: #fff; --fg: #111; --muted: #666; --border: #e5e5e5; --signal: #d4f95c; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: var(--bg); color: var(--fg);
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        font-size: 15px; line-height: 1.6;
+      }
+      main { max-width: 680px; margin: 0 auto; padding: 96px 24px; }
+      .mark { width: 48px; height: 48px; border-radius: 8px; background: #000; display: grid; place-items: center; margin-bottom: 28px; }
+      .mark svg { width: 26px; height: 26px; }
+      h1 { font-size: 34px; line-height: 1.15; letter-spacing: -0.03em; margin: 0 0 12px; }
+      p { color: var(--muted); margin: 0 0 28px; }
+      .tag { display: inline-block; background: var(--signal); color: #111; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-weight: 600; margin-bottom: 18px; }
+      .links { display: flex; flex-wrap: wrap; gap: 10px; }
+      a {
+        color: inherit; text-decoration: none; border: 1px solid var(--border);
+        border-radius: 6px; padding: 9px 14px; font-size: 13px; font-weight: 500;
+      }
+      a:hover { background: #f6f6f6; }
+      footer { margin-top: 56px; border-top: 1px solid var(--border); padding-top: 18px; color: var(--muted); font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 1920 1920" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+          <path d="M556 152H959V554L556 957H153V554Z" />
+          <path d="M1375 153H1776V555L1375 958H972V555Z" />
+          <path d="M556 957H967V1365L556 1775H146V1365Z" />
+          <path d="M1375 958H1783V1366L1375 1775H964V1366Z" />
+        </svg>
+      </div>
+      <span class="tag">LOCAL-ONLY</span>
+      <h1>SDR Lead Capture</h1>
+      <p>
+        Capture business leads from Google Maps and export them to CSV. Offline,
+        local-only, no account. Data never leaves the browser.
+      </p>
+      <div class="links">
+        <a href="./privacy.html">Privacy Policy</a>
+        <a href="https://github.com/Skalar-Solutions/ext-sdr-leadcapture">GitHub Repository</a>
+        <a href="https://github.com/Skalar-Solutions/ext-sdr-leadcapture/issues">Support</a>
+      </div>
+      <footer>SDR Lead Capture · Chrome extension · no data collection.</footer>
+    </main>
+  </body>
+</html>

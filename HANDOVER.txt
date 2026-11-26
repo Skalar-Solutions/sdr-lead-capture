@@ -1,7 +1,7 @@
 ================================================================================
 HANDOVER - SDR LEAD CAPTURE (CSV EDITION)
 Tanggal : 26 November 2026
-Versi   : 1.0.2
+Versi   : 1.0.3
 Bentuk  : extension Chrome mandiri (tanpa backend)
 Repo    : /Users/bytedance/Vano/Code/sdr-lead-capture (branch: main)
 ================================================================================
@@ -19,15 +19,15 @@ FILE RILIS
 ----------
 Zip siap upload / share:
 
-  release/sdr-lead-capture-csv-1.0.2-chrome.zip   (231 KB)
+  release/sdr-lead-capture-csv-1.0.3-chrome.zip   (330 KB)
 
 Checksum SHA-256:
 
-  3dad205dc718ce11d05e6a4be9792956096f2fea3999eb76713ce92b5bfc06d4
+  af7bcd18633924478c8aa8f4bb2d1efccd1722eac267a022829e8fe8a5ace851
 
 Folder unpacked untuk internal:
 
-  release/sdr-lead-capture-1.0.2/
+  release/sdr-lead-capture-1.0.3/
 
 Cara pakai zip:
   A. Chrome Web Store -> upload zip ini sebagai package.
@@ -126,7 +126,7 @@ SUDAH DIVERIFIKASI
 ------------------
 - 40 tes core + 27 tes extension (scraper + dedupe), semua hijau.
 - Typecheck bersih.
-- Build produksi bersih (~766 KB) + zip 231 KB.
+- Build produksi bersih (~879 KB) + zip 330 KB.
 - CI GitHub Actions: test + typecheck + build + zip (artifact).
 - E2E Chromium headless:
     popup render
@@ -164,6 +164,31 @@ Script membuka Google Maps asli, memilih tempat pertama, menyimpan, lalu
 menyimpan ulang untuk memastikan dedupe bekerja. Gagal = exit non-zero.
 Bukti hasil: artifacts/smoke-maps.png dan artifacts/smoke-maps.json.
 
+DESAIN UI (v1.0.3)
+------------------
+Sumber token: packages/ui/src/styles/tokens.css
+
+- Warna : netral mono; satu accent "signal" (lime) untuk fokus, HOT, dan
+          highlight kecil. Aksi utama memakai hitam/putih.
+- Font  : Inter Variable (latin subset, self-hosted di styles/fonts/).
+- Ukuran: 12 meta, 13 body/control, 14 baseline, 18 judul halaman, 20 angka stat.
+- Radius: 4 chip, 6 control, 8 surface, 10 overlay. Tidak ada rounded-full.
+- Border: selalu 1px; focus ring 2px.
+- Shadow: hanya shadow-lg untuk elemen mengambang; kartu memakai border.
+
+CHROME WEB STORE
+----------------
+- Paket      : release/sdr-lead-capture-csv-1.0.3-chrome.zip
+- Screenshot : store/screenshot-1-dashboard.png (1280x800)
+               store/screenshot-2-maps.png (1280x800)
+- Promo tile : store/promo-440x280.png
+- Listing    : store/listing.md (deskripsi, kategori, permission justification)
+- Privacy    : docs/privacy.html
+- URL privacy: https://skalar-solutions.github.io/ext-sdr-leadcapture/privacy.html
+  Aktifkan GitHub Pages: Settings -> Pages -> Deploy from a branch ->
+  main -> folder /docs -> Save.
+- Generate ulang aset: `node scripts/store-assets.mjs`
+
 BATASAN / CATATAN
 -----------------
 1. Scraper bergantung pada class DOM Google Maps. Kalau Google mengubah markup,
@@ -175,8 +200,10 @@ BATASAN / CATATAN
    link tidak lengkap, fallback ke nama + telepon + alamat. Capture ulang
    tempat yang sama tidak menambah baris.
 4. Tidak ada fitur edit. Kalau salah, hapus baris lalu capture ulang.
-5. Bundle total ~766 KB (content script 285 KB, shared chunk 304 KB).
-6. Zip rilis 1.0.2 sudah berisi perbaikan P0/P1 dan icon baru. Regenerate
+5. Bundle total ~879 KB (content script 285 KB, content CSS 119 KB karena font
+   Inter di-inline untuk shadow root, shared chunk 304 KB).
+6. Zip rilis 1.0.3 sudah berisi perbaikan P0/P1, icon baru, dan UI refresh
+   (mono + accent lime, Inter, radius/border/font-size terbatas). Regenerate
    dengan `pnpm build && pnpm zip` + update release/ sebelum distribusi.
 
 OPSIONAL: MEMBERESKAN INFRA LAMA
