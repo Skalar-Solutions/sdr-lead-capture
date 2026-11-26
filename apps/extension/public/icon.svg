@@ -1,10 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1920" fill="none">
-  <!-- Ikon aplikasi: glyph putih di atas bidang hitam, aman untuk toolbar terang & gelap. -->
-  <rect width="1920" height="1920" rx="384" fill="#000000"/>
-  <g fill="#FFFFFF" transform="translate(153.6 153.6) scale(0.84)">
-    <path d="M556 152H959V554L556 957H153V554Z"/>
-    <path d="M1375 153H1776V555L1375 958H972V555Z"/>
-    <path d="M556 957H967V1365L556 1775H146V1365Z"/>
-    <path d="M1375 958H1783V1366L1375 1775H964V1366Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Skalar" shape-rendering="crispEdges">
+  <title>Skalar</title>
+  <rect width="400" height="400" rx="80" fill="#000000"/>
+  <g transform="translate(90,90) scale(0.55)">
+    <path fill="#FFFFFF" d="M100 0h100v100L100 200H0V100zM300 0h100v100L300 200H200V100zM100 200h100v100L100 400H0V300zM300 200h100v100L300 400H200V300z"/>
   </g>
 </svg>
