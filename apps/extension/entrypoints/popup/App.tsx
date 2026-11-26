@@ -21,7 +21,10 @@ export default function App() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [ready, setReady] = useState(false);
-  const [source, setSource] = useState<SourceStatus>({ tone: "info", text: "Memeriksa tab..." });
+  const [source, setSource] = useState<SourceStatus>({
+    tone: "info",
+    text: "Memeriksa halaman...",
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -37,12 +40,15 @@ export default function App() {
         const isMaps = /google\.(com|co\.id)\/maps/.test(url) || /maps\.google\./.test(url);
 
         if (!isMaps) {
-          setSource({ tone: "warn", text: "Bukan Google Maps. Buka Maps lalu klik satu tempat." });
+          setSource({
+            tone: "warn",
+            text: "Buka Google Maps dulu, lalu klik satu bisnis.",
+          });
           return;
         }
 
         if (tab?.id == null) {
-          setSource({ tone: "warn", text: "Tab tidak terdeteksi." });
+          setSource({ tone: "warn", text: "Halaman Google Maps tidak terdeteksi." });
           return;
         }
 
@@ -55,22 +61,22 @@ export default function App() {
           if (!isCaptureUseful(next)) {
             setSource({
               tone: "warn",
-              text: "Data tempat belum lengkap. Tunggu panel detail terbuka, lalu buka popup lagi.",
+              text: "Data belum lengkap. Buka detail bisnisnya, lalu coba lagi.",
             });
           } else {
             setCapture(next);
-            setSource({ tone: "info", text: `Terekstrak: ${response.data.companyName}` });
+            setSource({ tone: "info", text: `Terbaca: ${response.data.companyName}` });
           }
         } else {
           setSource({
             tone: "warn",
-            text: "Belum ada tempat yang kebaca. Klik salah satu hasil di Maps.",
+            text: "Belum ada bisnis yang terbaca. Klik salah satu hasil di Google Maps.",
           });
         }
       } catch {
         setSource({
           tone: "warn",
-          text: "Content script belum siap. Refresh tab Google Maps lalu coba lagi.",
+          text: "Halaman Google Maps perlu dimuat ulang. Refresh tab (F5), lalu coba lagi.",
         });
       } finally {
         if (!cancelled) setReady(true);
@@ -91,12 +97,12 @@ export default function App() {
       setSavedCount(result.count);
       setSaved(true);
       if (result.duplicate) {
-        toast.info("Sudah ada di CSV", {
+        toast.info("Sudah pernah disimpan", {
           description: `${capture.companyName} tidak disimpan dua kali.`,
         });
       } else {
-        toast.success("Masuk CSV", {
-          description: `${capture.companyName}${capture.website ? "" : " · tidak punya website"}`,
+        toast.success("Tersimpan", {
+          description: `${capture.companyName}${capture.website ? "" : " · belum punya website"}`,
         });
       }
     } catch (error) {
@@ -111,11 +117,11 @@ export default function App() {
   async function handleDownload() {
     const captures = await readCaptures();
     if (captures.length === 0) {
-      toast.error("Belum ada data untuk diekspor");
+      toast.error("Belum ada data untuk di-download");
       return;
     }
     downloadCsvFile(capturesToCsv(captures), buildCsvFilename());
-    toast.success(`${captures.length} baris CSV diunduh`);
+    toast.success(`${captures.length} lead di-download (CSV)`);
   }
 
   if (!ready) {
@@ -134,13 +140,13 @@ export default function App() {
           className="w-auto flex-1 py-2"
         >
           <AlertTitle className="text-xs">
-            {source.tone === "warn" ? "Perhatian" : "Sumber"}
+            {source.tone === "warn" ? "Perlu dicek" : "Status"}
           </AlertTitle>
           <AlertDescription className="text-xs">{source.text}</AlertDescription>
         </Alert>
         <Button type="button" size="sm" variant="outline" onClick={() => void openDashboard()}>
           <ClipboardList className="size-4" />
-          Data
+          Lihat Data
         </Button>
       </div>
 
@@ -152,7 +158,7 @@ export default function App() {
             <CardContent className="flex flex-col items-center gap-2.5 py-6 text-center">
               <MapPin className="size-5 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">
-                Buka Google Maps dan klik satu tempat untuk mulai capture.
+                Buka Google Maps, cari bisnis, lalu klik salah satu hasilnya.
               </p>
               <Button
                 size="sm"
@@ -169,7 +175,7 @@ export default function App() {
       </div>
 
       <div className="flex items-center justify-between gap-2 border-t px-3 py-2">
-        <span className="text-xs text-muted-foreground">{savedCount} baris tersimpan</span>
+        <span className="text-xs text-muted-foreground">{savedCount} lead tersimpan</span>
         <Button size="sm" variant="outline" onClick={handleDownload} disabled={savedCount === 0}>
           <Download className="size-4" />
           Download CSV

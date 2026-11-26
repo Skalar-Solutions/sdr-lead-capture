@@ -139,17 +139,17 @@ try {
     waitUntil: "domcontentloaded",
   });
   await search.waitForSelector("sdr-capture-ui", { state: "attached", timeout: 15000 });
-  await search.getByRole("button", { name: /Scrape Semua/ }).waitFor({ timeout: 15000 });
+  await search.getByRole("button", { name: /Ambil Semua/ }).waitFor({ timeout: 15000 });
 
   // Auto-detect: klik hasil pencarian -> drawer terbuka otomatis.
   await search.locator("a.hfpxzc").first().click();
   await search.getByRole("button", { name: "Simpan ke CSV" }).waitFor({ timeout: 15000 });
-  await search.getByText("Terekstrak: Kopi Cipete Satu").first().waitFor({ timeout: 10000 });
+  await search.getByText("Terbaca: Kopi Cipete Satu").first().waitFor({ timeout: 10000 });
   console.log("auto-detect: klik tempat membuka drawer");
   await search.getByTitle("Tutup").click();
 
-  await search.getByRole("button", { name: /Scrape Semua/ }).click();
-  await search.getByRole("button", { name: "Mulai Scrape" }).click();
+  await search.getByRole("button", { name: /Ambil Semua/ }).click();
+  await search.getByRole("button", { name: "Mulai Ambil" }).click();
   await search.getByRole("button", { name: /Simpan 3 ke CSV/ }).waitFor({ timeout: 30000 });
   await search.screenshot({ path: path.join(outDir, "bulk-review.png") });
   await search.getByRole("button", { name: /Simpan 3 ke CSV/ }).click();
@@ -157,8 +157,8 @@ try {
   console.log("bulk: 3 lead tersimpan");
 
   // Scrape ulang -> semua harus terdeteksi duplikat.
-  await search.getByRole("button", { name: "Scrape lagi" }).click();
-  await search.getByRole("button", { name: "Mulai Scrape" }).click();
+  await search.getByRole("button", { name: "Ambil Lagi" }).click();
+  await search.getByRole("button", { name: "Mulai Ambil" }).click();
   await search.waitForSelector("text=Pilih semua (0)", { timeout: 30000 });
   console.log("bulk: scrape ulang -> semua duplikat dilewati");
 

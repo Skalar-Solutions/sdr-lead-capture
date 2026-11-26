@@ -1,7 +1,7 @@
 ================================================================================
 HANDOVER - SDR LEAD CAPTURE (CSV EDITION)
 Tanggal : 26 November 2026
-Versi   : 1.0.4
+Versi   : 1.0.5
 Bentuk  : extension Chrome mandiri (tanpa backend)
 Repo    : /Users/bytedance/Vano/Code/sdr-lead-capture (branch: main)
 ================================================================================
@@ -19,15 +19,15 @@ FILE RILIS
 ----------
 Zip siap upload / share:
 
-  release/sdr-lead-capture-1.0.4-chrome.zip   (334 KB)
+  release/sdr-lead-capture-1.0.5-chrome.zip   (334 KB)
 
 Download internal:
 
-  https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.4
+  https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.5
 
 Folder unpacked untuk internal:
 
-  release/sdr-lead-capture-1.0.4/
+  release/sdr-lead-capture-1.0.5/
 
 Cara pakai zip:
   A. Distribusi internal: download dari GitHub Releases.
@@ -48,7 +48,7 @@ Workflow .github/workflows/release.yml otomatis:
 
 Nama asset: sdr-lead-capture-X.Y.Z-chrome.zip
 Isi zip hanya build extension (tanpa source/test/node_modules).
-Tag harus sama dengan versi, mis. tag v1.0.4 untuk versi 1.0.4.
+Tag harus sama dengan versi, mis. tag v1.0.5 untuk versi 1.0.5.
 
 Alternatif tanpa zip:
   chrome://extensions -> Load unpacked -> apps/extension/.output/chrome-mv3
@@ -70,8 +70,8 @@ BULK SCRAPE
 -----------
 Dari halaman hasil pencarian (daftar bisnis di panel kiri):
 
-1. Klik tombol "Scrape Semua" di kanan bawah.
-2. Pilih batas 20/50/100, lalu "Mulai Scrape".
+1. Klik tombol "Ambil Semua" di kanan bawah.
+2. Pilih batas 20/50/100, lalu "Mulai Ambil".
 3. Extension auto-scroll daftar, membuka tiap tempat, dan extract datanya
    dengan jeda acak 0,6-1,3 detik per tempat.
 4. Setelah selesai, muncul checklist. Tempat yang sudah ada ditandai
@@ -132,6 +132,13 @@ PENYIMPANAN DATA
 - Tidak ada data yang dikirim keluar.
 - Uninstall extension = data hilang. Download CSV dulu.
 - Data terikat ke profil Chrome di device itu (tidak sync antar device).
+
+DOKUMEN
+-------
+HANDOVER.txt        catatan teknis (file ini)
+README.md           panduan pemasangan & pemakaian
+PANDUAN-SDR.md      panduan khusus tim SDR (nonteknis)
+CATATAN-RILIS.md    catatan perubahan tiap versi
 
 STRUKTUR PENTING
 ----------------
@@ -218,7 +225,7 @@ CHROME WEB STORE (OPSIONAL)
 Distribusi utama saat ini: GitHub Releases (zip).
 Chrome Web Store butuh akun developer berbayar; aset di bawah ini siap kalau
 nanti mau publish ke store.
-- Paket      : release/sdr-lead-capture-1.0.4-chrome.zip
+- Paket      : release/sdr-lead-capture-1.0.5-chrome.zip
 - Screenshot : store/screenshot-1-dashboard.png (1280x800)
                store/screenshot-2-maps.png (1280x800)
 - Promo tile : store/promo-440x280.png
@@ -245,7 +252,7 @@ BATASAN / CATATAN
 5. Tidak ada fitur edit. Kalau salah, hapus baris lalu capture ulang.
 6. Bundle total ~904 KB (content script 287 KB, content CSS 119 KB karena font
    Inter di-inline untuk shadow root, shared chunk 304 KB).
-7. Zip rilis 1.0.4 sudah berisi auto-detect, bulk scrape, perbaikan P0/P1,
+7. Zip rilis 1.0.5 sudah berisi auto-detect, bulk scrape, perbaikan P0/P1,
    icon baru, dan UI refresh (mono + accent lime, Inter, radius/border/font-size
    terbatas). Regenerate dengan `pnpm build && pnpm zip` + update release/
    sebelum distribusi.

@@ -41,7 +41,11 @@ export function CaptureCard({ capture, saving, saved, elevated, onSave }: Captur
           <CardTitle className="leading-tight">{capture.companyName || "(tanpa nama)"}</CardTitle>
           <div className="flex shrink-0 gap-1">
             {hot ? (
-              <Badge variant="signal" className="gap-1">
+              <Badge
+                variant="signal"
+                className="gap-1"
+                title="Belum punya website, biasanya cocok ditawari website"
+              >
                 <Flame className="size-3" /> HOT
               </Badge>
             ) : null}

@@ -45,8 +45,8 @@ export function ContentApp() {
         setSaved(false);
         setNotice(
           data.companyName
-            ? "Data tempat belum lengkap. Tunggu panel detail terbuka, lalu coba lagi."
-            : "Klik salah satu tempat di Maps dulu.",
+            ? "Data belum lengkap. Tunggu detail bisnis terbuka, lalu coba lagi."
+            : "Klik salah satu bisnis di Google Maps dulu.",
         );
       }
       return false;
@@ -56,7 +56,7 @@ export function ContentApp() {
     setMode("single");
     lastCapturedPlace.current = data.companyName;
     setNotice(
-      `Terekstrak: ${data.companyName}${data.isSocialMediaOnly ? ` · hanya ${data.socialType}` : ""}`,
+      `Terbaca: ${data.companyName}${data.isSocialMediaOnly ? ` · hanya ${data.socialType}` : ""}`,
     );
     if (autoTrigger) setOpen(true);
     return true;
@@ -113,7 +113,7 @@ export function ContentApp() {
 
   function openBulk() {
     setMode("bulk");
-    setNotice("Scrape semua hasil pencarian");
+    setNotice("Ambil semua hasil pencarian");
     setOpen(true);
   }
 
@@ -162,7 +162,7 @@ export function ContentApp() {
               onClick={openBulk}
             >
               <ListChecks className="size-4" />
-              Scrape Semua
+              Ambil Semua
             </Button>
           ) : null}
           <Button size="lg" className="rounded-lg shadow-lg" onClick={handleOpen}>
@@ -178,14 +178,14 @@ export function ContentApp() {
   return (
     <div className="fixed bottom-6 right-6 z-[2147483647] w-[400px] max-w-[calc(100vw-2rem)] font-sans">
       <div className="mb-2 flex items-center gap-1 rounded-md bg-foreground px-2 py-1.5 text-xs text-background shadow-lg">
-        <span className="min-w-0 flex-1 truncate">{notice || "Capture lead dari Maps"}</span>
+        <span className="min-w-0 flex-1 truncate">{notice || "Ambil data bisnis dari Maps"}</span>
         {mode === "single" ? (
           <>
             {hasFeed ? (
               <Button
                 size="icon"
                 variant="ghost"
-                title="Scrape semua hasil pencarian"
+                title="Ambil semua hasil pencarian"
                 className="size-6 text-background hover:bg-background/10"
                 onClick={openBulk}
               >
@@ -195,7 +195,7 @@ export function ContentApp() {
             <Button
               size="icon"
               variant="ghost"
-              title="Scrape ulang"
+              title="Baca ulang data bisnis"
               className="size-6 text-background hover:bg-background/10"
               onClick={() => scrape(false)}
             >

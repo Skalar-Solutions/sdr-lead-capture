@@ -157,9 +157,9 @@ export function BulkPanel({ onClose, onRunningChange, onSaved }: BulkPanelProps)
       <div className="flex items-center gap-2 border-b px-3 py-2.5">
         <ListChecks className="size-4 text-muted-foreground" />
         <div className="min-w-0 flex-1">
-          <div className="text-sm leading-tight font-semibold">Scrape Semua Hasil</div>
+          <div className="text-sm leading-tight font-semibold">Ambil Semua Hasil</div>
           <div className="text-xs text-muted-foreground">
-            Buka tiap tempat di daftar & ambil data lengkap
+            Buka tiap bisnis di daftar dan ambil datanya
           </div>
         </div>
       </div>
@@ -169,7 +169,7 @@ export function BulkPanel({ onClose, onRunningChange, onSaved }: BulkPanelProps)
           <>
             <div>
               <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                Maksimal tempat:
+                Jumlah maksimal:
               </span>
               <div className="grid grid-cols-3 gap-1.5">
                 {LIMITS.map((value) => (
@@ -189,12 +189,12 @@ export function BulkPanel({ onClose, onRunningChange, onSaved }: BulkPanelProps)
                 ))}
               </div>
               <p className="mt-1.5 text-xs text-muted-foreground">
-                Estimasi ±{Math.ceil((limit * SECONDS_PER_PLACE) / 60)} menit. Jangan klik apa-apa
-                di Maps selama proses berjalan.
+                Estimasi ±{Math.ceil((limit * SECONDS_PER_PLACE) / 60)} menit. Selama proses,
+                jangan klik apa pun di Maps.
               </p>
             </div>
             <Button className="w-full" onClick={() => void start()}>
-              Mulai Scrape
+              Mulai Ambil
             </Button>
           </>
         ) : null}
@@ -220,7 +220,7 @@ export function BulkPanel({ onClose, onRunningChange, onSaved }: BulkPanelProps)
               className="[&>div]:bg-signal"
             />
             <Button variant="outline" size="sm" className="w-full" onClick={stop}>
-              <Square className="size-3.5" /> Berhenti (simpan yang sudah terbaca)
+              <Square className="size-3.5" /> Berhenti dan simpan yang sudah terbaca
             </Button>
           </div>
         ) : null}
@@ -233,7 +233,12 @@ export function BulkPanel({ onClose, onRunningChange, onSaved }: BulkPanelProps)
                   <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
                   Pilih semua ({selectable.length})
                 </label>
-                <span className="text-xs text-muted-foreground">{hotCount} HOT lead</span>
+                <span
+                  className="text-xs text-muted-foreground"
+                  title="HOT = belum punya website, biasanya cocok ditawari website"
+                >
+                  {hotCount} HOT lead
+                </span>
               </div>
             ) : null}
 
@@ -264,7 +269,7 @@ export function BulkPanel({ onClose, onRunningChange, onSaved }: BulkPanelProps)
         {phase === "saved" ? (
           <div className="grid grid-cols-2 gap-1.5">
             <Button onClick={() => void openDashboard()}>
-              <ClipboardList className="size-4" /> Buka Data
+              <ClipboardList className="size-4" /> Lihat Data
             </Button>
             <Button
               variant="outline"
@@ -274,7 +279,7 @@ export function BulkPanel({ onClose, onRunningChange, onSaved }: BulkPanelProps)
                 setPhase("setup");
               }}
             >
-              Scrape lagi
+              Ambil Lagi
             </Button>
           </div>
         ) : null}
@@ -337,11 +342,15 @@ function BulkRow({
         ) : null}
       </div>
       <div className="flex shrink-0 flex-wrap justify-end gap-1">
-        {status === "duplicate" ? <Badge variant="outline">Sudah ada</Badge> : null}
-        {status === "failed" ? <Badge variant="outline">Gagal dibaca</Badge> : null}
+        {status === "duplicate" ? <Badge variant="outline">Sudah disimpan</Badge> : null}
+        {status === "failed" ? <Badge variant="outline">Tidak terbaca</Badge> : null}
         {status === "skipped" ? <Badge variant="outline">Dilewati</Badge> : null}
         {status === "ok" && hot ? (
-          <Badge variant="signal" className="gap-0.5">
+          <Badge
+            variant="signal"
+            className="gap-0.5"
+            title="Belum punya website, biasanya cocok ditawari website"
+          >
             <Flame className="size-3" /> HOT
           </Badge>
         ) : null}

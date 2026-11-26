@@ -101,7 +101,7 @@ export default function DashboardApp() {
       return;
     }
     downloadCsvFile(capturesToCsv(filtered), buildCsvFilename());
-    toast.success(`${filtered.length} baris CSV diunduh`);
+    toast.success(`${filtered.length} lead di-download (CSV)`);
   }
 
   async function handleDelete() {
@@ -110,7 +110,7 @@ export default function DashboardApp() {
     await writeCaptures(next);
     setCaptures(next);
     setDeleteTarget(null);
-    toast.success("Baris dihapus");
+    toast.success("Lead dihapus");
   }
 
   async function handleClearAll() {
@@ -125,9 +125,9 @@ export default function DashboardApp() {
       <div className="mx-auto max-w-7xl space-y-4 p-6">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">Hasil Scrape</h1>
+            <h1 className="text-lg font-semibold tracking-tight">Data Lead</h1>
             <p className="text-xs text-muted-foreground">
-              Tersimpan lokal di browser ini. Download CSV kalau sudah selesai.
+              Semua lead tersimpan di browser ini. Download CSV kalau sudah selesai.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export default function DashboardApp() {
               }}
             >
               <RefreshCw className="size-4" />
-              Refresh
+              Muat ulang
             </Button>
             <Button
               variant="outline"
@@ -162,7 +162,7 @@ export default function DashboardApp() {
           <Card className="py-4">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Total baris
+                Total lead
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4">
@@ -171,7 +171,9 @@ export default function DashboardApp() {
           </Card>
           <Card className="py-4">
             <CardHeader className="px-4 pb-1">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Hari ini</CardTitle>
+              <CardTitle className="text-xs font-medium text-muted-foreground">
+                Lead hari ini
+              </CardTitle>
             </CardHeader>
             <CardContent className="px-4">
               <p className="text-xl font-semibold">{stats.today}</p>
@@ -180,7 +182,7 @@ export default function DashboardApp() {
           <Card className="py-4">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Tanpa website
+                Belum punya website
               </CardTitle>
             </CardHeader>
             <CardContent className="flex items-center gap-2 px-4">
@@ -191,7 +193,7 @@ export default function DashboardApp() {
           <Card className="py-4">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Sosmed only
+                Hanya sosmed
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4">
@@ -199,6 +201,13 @@ export default function DashboardApp() {
             </CardContent>
           </Card>
         </div>
+
+        <p className="px-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-sm bg-signal px-1.5 py-0.5 text-[11px] font-semibold text-signal-foreground">
+            <Flame className="size-3" /> HOT
+          </span>{" "}
+          = belum punya website. Biasanya prospek yang cocok ditawari website.
+        </p>
 
         <Card className="gap-3 py-3">
           <CardContent className="flex flex-wrap items-center gap-2 px-4">
@@ -211,7 +220,7 @@ export default function DashboardApp() {
                 className="pl-8"
               />
             </div>
-            <span className="ml-auto text-xs text-muted-foreground">{filtered.length} baris</span>
+            <span className="ml-auto text-xs text-muted-foreground">{filtered.length} lead</span>
           </CardContent>
         </Card>
 
@@ -219,8 +228,8 @@ export default function DashboardApp() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[120px]">Waktu</TableHead>
-                <TableHead>Bisnis</TableHead>
+                <TableHead className="w-[120px]">Disimpan</TableHead>
+                <TableHead>Nama bisnis</TableHead>
                 <TableHead>Kontak</TableHead>
                 <TableHead className="w-[220px]">Website / Sosmed</TableHead>
                 <TableHead className="w-[110px]">Rating</TableHead>
@@ -241,7 +250,18 @@ export default function DashboardApp() {
               {!loading && pageItems.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="py-10 text-center text-xs text-muted-foreground">
-                    Belum ada data. Buka Google Maps, klik satu tempat, lalu capture.
+                    <div className="flex flex-col items-center gap-2">
+                      <span>Belum ada lead. Buka Google Maps, cari bisnis, lalu klik salah satu hasilnya.</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          void browser.tabs.create({ url: "https://www.google.com/maps" })
+                        }
+                      >
+                        Buka Google Maps
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : null}
@@ -255,7 +275,11 @@ export default function DashboardApp() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">{capture.companyName || "(tanpa nama)"}</span>
                       {!hasRealWebsite(capture) ? (
-                        <Badge variant="signal" className="gap-1">
+                        <Badge
+                          variant="signal"
+                          className="gap-1"
+                          title="Belum punya website, biasanya cocok ditawari website"
+                        >
                           <Flame className="size-3" /> HOT
                         </Badge>
                       ) : null}
@@ -308,7 +332,7 @@ export default function DashboardApp() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Hapus baris"
+                      title="Hapus lead"
                       onClick={() => setDeleteTarget(capture)}
                     >
                       <Trash2 className="size-4 text-muted-foreground transition-colors hover:text-destructive" />
@@ -351,9 +375,9 @@ export default function DashboardApp() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus baris?</AlertDialogTitle>
+            <AlertDialogTitle>Hapus lead ini?</AlertDialogTitle>
             <AlertDialogDescription>
-              “{deleteTarget?.companyName || "(tanpa nama)"}” akan dihapus dari penyimpanan lokal.
+              “{deleteTarget?.companyName || "(tanpa nama)"}” akan dihapus dari data di browser ini.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -368,7 +392,7 @@ export default function DashboardApp() {
           <AlertDialogHeader>
             <AlertDialogTitle>Hapus semua data?</AlertDialogTitle>
             <AlertDialogDescription>
-              Semua {captures.length} baris akan dihapus. Download CSV dulu kalau belum.
+              Semua {captures.length} lead akan dihapus. Download CSV dulu kalau belum.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
