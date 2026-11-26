@@ -220,6 +220,24 @@ try {
   await dashboard.waitForSelector("text=Warung Steak Pak Joko", { timeout: 15000 });
   await dashboard.waitForSelector("text=Pak Joko (Owner)", { timeout: 10000 });
   await dashboard.waitForSelector("text=Follow up besok pagi", { timeout: 10000 });
+
+  // Filter cepat: HOT hanya menampilkan lead tanpa website.
+  await dashboard.getByRole("button", { name: /^HOT/ }).click();
+  await dashboard.waitForSelector("text=Warung Steak Pak Joko", { timeout: 10000 });
+  if ((await dashboard.getByText("Kopi Cipete Dua").count()) !== 0) {
+    throw new Error("Filter HOT masih menampilkan lead yang punya website");
+  }
+  await dashboard.getByRole("button", { name: "Reset" }).click();
+  await dashboard.waitForSelector("text=Kopi Cipete Dua", { timeout: 10000 });
+
+  // Pencarian: hanya lead yang cocok yang tampil.
+  await dashboard.getByPlaceholder(/Cari nama/).fill("Kopi Cipete Dua");
+  await dashboard.waitForTimeout(300);
+  if ((await dashboard.getByText("Warung Steak Pak Joko").count()) !== 0) {
+    throw new Error("Pencarian masih menampilkan lead yang tidak cocok");
+  }
+  await dashboard.getByRole("button", { name: "Reset" }).click();
+
   if (mapsErrors.length > 0) {
     throw new Error(`Content script error: ${mapsErrors.join(" | ")}`);
   }

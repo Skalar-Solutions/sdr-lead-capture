@@ -13,14 +13,7 @@ import { Button } from "@sdr/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@sdr/ui/components/ui/card";
 import { Input } from "@sdr/ui/components/ui/input";
 import { Skeleton } from "@sdr/ui/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@sdr/ui/components/ui/table";
+import { cn } from "@sdr/ui/lib/utils";
 import {
   ChevronDown,
   ChevronRight,
@@ -32,7 +25,7 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
-import { Fragment, useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { browser } from "wxt/browser";
 
@@ -53,6 +46,9 @@ import { readCaptures, writeCaptures } from "@/lib/store";
 
 const PAGE_SIZE = 25;
 
+type QuickFilter = "all" | "hot" | "priority" | "no-pic";
+type SortMode = "newest" | "priority" | "name";
+
 function formatDate(value: string): string {
   try {
     return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(
@@ -61,6 +57,34 @@ function formatDate(value: string): string {
   } catch {
     return value;
   }
+}
+
+function formatShortDate(value: string): string {
+  try {
+    return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short" }).format(
+      new Date(value),
+    );
+  } catch {
+    return value;
+  }
+}
+
+function sourceLabel(capture: Capture): string {
+  if (capture.website) {
+    try {
+      return new URL(capture.website).hostname.replace(/^www\./, "");
+    } catch {
+      return capture.website;
+    }
+  }
+  if (capture.socialUrl) {
+    return capture.instagram || capture.socialType || "Sosmed";
+  }
+  return "Tidak ada";
+}
+
+function priorityLabel(priority: number): string {
+  return priority >= 5 ? "HOT" : priority >= 4 ? "Tinggi" : "Sedang";
 }
 
 function matchesQuery(capture: Capture, query: string): boolean {
@@ -75,6 +99,7 @@ function matchesQuery(capture: Capture, query: string): boolean {
     capture.picName,
     capture.picRole,
     capture.notes,
+    capture.instagram,
     ...(capture.digitalGaps ?? []),
     ...(capture.services ?? []),
   ]
@@ -87,6 +112,8 @@ export default function DashboardApp() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
+  const [sortBy, setSortBy] = useState<SortMode>("newest");
   const [page, setPage] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Capture | null>(null);
@@ -113,9 +140,25 @@ export default function DashboardApp() {
 
   useEffect(() => {
     setPage(0);
-  }, [deferredSearch]);
+  }, [deferredSearch, quickFilter, sortBy]);
 
-  const filtered = captures.filter((capture) => matchesQuery(capture, deferredSearch));
+  const searched = captures.filter((capture) => matchesQuery(capture, deferredSearch));
+
+  const filtered = searched
+    .filter((capture) => {
+      if (quickFilter === "hot") return !hasRealWebsite(capture);
+      if (quickFilter === "priority") return capture.priority === 5;
+      if (quickFilter === "no-pic") return !capture.picName?.trim();
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "priority") {
+        return b.priority - a.priority || b.capturedAt.localeCompare(a.capturedAt);
+      }
+      if (sortBy === "name") return a.companyName.localeCompare(b.companyName, "id");
+      return b.capturedAt.localeCompare(a.capturedAt);
+    });
+
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pageItems = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
@@ -126,6 +169,8 @@ export default function DashboardApp() {
     today: captures.filter((capture) => capture.capturedAt.slice(0, 10) === today).length,
     noWebsite: captures.filter((capture) => !hasRealWebsite(capture)).length,
     socialOnly: captures.filter((capture) => capture.socialType !== null).length,
+    priority5: captures.filter((capture) => capture.priority === 5).length,
+    noPic: captures.filter((capture) => !capture.picName?.trim()).length,
   };
 
   function handleExportCrm() {
@@ -151,6 +196,7 @@ export default function DashboardApp() {
     const next = captures.filter((capture) => capture.id !== deleteTarget.id);
     await writeCaptures(next);
     setCaptures(next);
+    if (expandedId === deleteTarget.id) setExpandedId(null);
     setDeleteTarget(null);
     toast.success("Lead dihapus");
   }
@@ -158,13 +204,44 @@ export default function DashboardApp() {
   async function handleClearAll() {
     await writeCaptures([]);
     setCaptures([]);
+    setExpandedId(null);
     setClearOpen(false);
     toast.success("Semua data dihapus");
   }
 
+  function resetFilters() {
+    setSearch("");
+    setQuickFilter("all");
+    setSortBy("newest");
+  }
+
+  const filters: { id: QuickFilter; label: string; count: number; title: string }[] = [
+    { id: "all", label: "Semua", count: stats.total, title: "Tampilkan semua lead" },
+    {
+      id: "hot",
+      label: "HOT",
+      count: stats.noWebsite,
+      title: "Belum punya website, biasanya cocok ditawari website",
+    },
+    {
+      id: "priority",
+      label: "Prioritas 5",
+      count: stats.priority5,
+      title: "Lead dengan prioritas tertinggi",
+    },
+    {
+      id: "no-pic",
+      label: "Belum ada PIC",
+      count: stats.noPic,
+      title: "Lead yang belum punya nama PIC",
+    },
+  ];
+
+  const isFiltering = quickFilter !== "all" || search.trim() !== "";
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl space-y-4 p-6">
+      <div className="mx-auto max-w-7xl space-y-4 p-4 sm:p-6">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-lg font-semibold tracking-tight">Data Lead</h1>
@@ -204,8 +281,8 @@ export default function DashboardApp() {
           </div>
         </header>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="py-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+          <Card className="py-3">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
                 Total lead
@@ -215,7 +292,7 @@ export default function DashboardApp() {
               <p className="text-xl font-semibold">{stats.total}</p>
             </CardContent>
           </Card>
-          <Card className="py-4">
+          <Card className="py-3">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
                 Lead hari ini
@@ -225,7 +302,7 @@ export default function DashboardApp() {
               <p className="text-xl font-semibold">{stats.today}</p>
             </CardContent>
           </Card>
-          <Card className="py-4">
+          <Card className="py-3">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
                 Belum punya website
@@ -236,7 +313,7 @@ export default function DashboardApp() {
               <Flame className="size-4 text-muted-foreground" />
             </CardContent>
           </Card>
-          <Card className="py-4">
+          <Card className="py-3">
             <CardHeader className="px-4 pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
                 Hanya sosmed
@@ -248,16 +325,9 @@ export default function DashboardApp() {
           </Card>
         </div>
 
-        <p className="px-1 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 rounded-sm bg-signal px-1.5 py-0.5 text-xs font-semibold text-signal-foreground">
-            <Flame className="size-3" /> HOT
-          </span>{" "}
-          = belum punya website. Biasanya prospek yang cocok ditawari website.
-        </p>
-
-        <Card className="gap-3 py-3">
-          <CardContent className="flex flex-wrap items-center gap-2 px-4">
-            <div className="relative min-w-[240px] flex-1">
+        <Card className="overflow-hidden py-0">
+          <div className="flex flex-wrap items-center gap-2 border-b px-4 py-3">
+            <div className="relative min-w-[220px] flex-1">
               <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
               <Input
                 value={search}
@@ -266,267 +336,140 @@ export default function DashboardApp() {
                 className="pl-8"
               />
             </div>
-            <span className="ml-auto text-xs text-muted-foreground">{filtered.length} lead</span>
-          </CardContent>
+            <span className="text-xs text-muted-foreground">
+              {filtered.length === captures.length
+                ? `${captures.length} lead`
+                : `${filtered.length} dari ${captures.length} lead`}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 px-4 py-2.5">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {filters.map((filter) => {
+                const active = quickFilter === filter.id;
+                return (
+                  <Button
+                    key={filter.id}
+                    size="sm"
+                    variant={active ? "default" : "outline"}
+                    className="h-7 px-2.5 text-xs"
+                    title={filter.title}
+                    onClick={() => setQuickFilter(filter.id)}
+                  >
+                    {filter.label}
+                    <span
+                      className={cn(
+                        "ml-1 rounded-sm px-1 text-[11px]",
+                        active ? "bg-background/20" : "bg-muted",
+                      )}
+                    >
+                      {filter.count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+
+            <span className="hidden text-[11px] text-muted-foreground md:inline">
+              HOT = belum punya website
+            </span>
+
+            <div className="ml-auto flex items-center gap-1.5">
+              {isFiltering ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 text-xs text-muted-foreground"
+                  onClick={resetFilters}
+                >
+                  Reset
+                </Button>
+              ) : null}
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as SortMode)}
+                className="h-7 rounded-md border border-border bg-background px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                aria-label="Urutkan lead"
+              >
+                <option value="newest">Terbaru</option>
+                <option value="priority">Prioritas tertinggi</option>
+                <option value="name">Nama A–Z</option>
+              </select>
+            </div>
+          </div>
         </Card>
 
         <Card className="overflow-hidden py-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[36px]" />
-                <TableHead className="w-[116px]">Disimpan</TableHead>
-                <TableHead>Nama bisnis</TableHead>
-                <TableHead>Status & Tagging</TableHead>
-                <TableHead>Kontak</TableHead>
-                <TableHead className="w-[190px]">Website / Sosmed</TableHead>
-                <TableHead className="w-[170px]">Prioritas & PIC</TableHead>
-                <TableHead className="w-[52px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading
-                ? Array.from({ length: 4 }).map((_, index) => (
-                    <TableRow key={`skeleton-${index}`}>
-                      <TableCell colSpan={8}>
-                        <Skeleton className="h-8 w-full" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                : null}
-
-              {!loading && pageItems.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="py-10 text-center text-xs text-muted-foreground">
-                    <div className="flex flex-col items-center gap-2">
-                      <span>
-                        Belum ada lead. Buka Google Maps, cari bisnis, lalu klik salah satu hasilnya.
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          void browser.tabs.create({ url: "https://www.google.com/maps" })
-                        }
-                      >
-                        Buka Google Maps
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : null}
-
-              {pageItems.map((capture) => {
-                const isExpanded = expandedId === capture.id;
-                return (
-                  <Fragment key={capture.id}>
-                    <TableRow>
-                      <TableCell className="align-top pr-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-7"
-                          aria-label={isExpanded ? "Tutup detail" : "Lihat detail"}
-                          onClick={() => setExpandedId(isExpanded ? null : capture.id)}
-                        >
-                          {isExpanded ? (
-                            <ChevronDown className="size-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="size-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </TableCell>
-                      <TableCell className="align-top text-xs text-muted-foreground">
-                        {formatDate(capture.capturedAt)}
-                      </TableCell>
-                      <TableCell className="align-top">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-sm font-medium">
-                            {capture.companyName || "(tanpa nama)"}
-                          </span>
-                          {!hasRealWebsite(capture) ? (
-                            <Badge
-                              variant="signal"
-                              className="gap-1"
-                              title="Belum punya website, biasanya cocok ditawari website"
-                            >
-                              <Flame className="size-3" /> HOT
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {[capture.category || "—", capture.rating ? `Rating ${capture.rating}` : ""]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </div>
-                      </TableCell>
-                      <TableCell className="align-top text-xs">
-                        <div className="mb-1 flex flex-wrap items-center gap-1">
-                          <Badge variant="outline">{websiteStatusLabel(capture.websiteStatus)}</Badge>
-                        </div>
-                        {capture.digitalGaps.length > 0 ? (
-                          <div className="flex max-w-[220px] flex-wrap gap-1">
-                            {capture.digitalGaps.map((gap) => (
-                              <span
-                                key={gap}
-                                className="rounded-sm border border-border bg-muted px-1.5 py-0.5 text-xs text-foreground"
-                              >
-                                {digitalGapLabel(gap)}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                        {capture.services.length > 0 ? (
-                          <div className="mt-1 flex max-w-[220px] flex-wrap gap-1">
-                            {capture.services.map((service) => (
-                              <span
-                                key={service}
-                                className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-xs text-muted-foreground"
-                              >
-                                {serviceLabel(service)}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="align-top text-xs">
-                        <div className="font-medium">{capture.phone || "—"}</div>
-                        <div className="mt-1 max-w-[200px] truncate text-muted-foreground">
-                          {capture.address || "—"}
-                        </div>
-                      </TableCell>
-                      <TableCell className="align-top text-xs">
-                        {capture.website ? (
-                          <a
-                            href={capture.website}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 break-all text-foreground underline-offset-2 hover:underline"
-                          >
-                            {capture.website}
-                            <ExternalLink className="size-3 shrink-0" />
-                          </a>
-                        ) : capture.socialUrl ? (
-                          <div className="space-y-1">
-                            <Badge variant="outline">{capture.socialType}</Badge>
-                            <a
-                              href={capture.socialUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="block break-all text-foreground underline-offset-2 hover:underline"
-                            >
-                              {capture.socialUrl}
-                            </a>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">Tidak ada</span>
-                        )}
-                        {capture.instagram ? (
-                          <div className="mt-1 text-muted-foreground">{capture.instagram}</div>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="align-top text-xs">
-                        <div className="flex items-center gap-1 font-medium text-foreground">
-                          <Star className="size-3.5 fill-foreground text-foreground" />
-                          <span>P{capture.priority}</span>
-                        </div>
-                        {capture.picName ? (
-                          <div className="mt-1 font-medium">
-                            {capture.picName}
-                            {capture.picRole ? ` (${capture.picRole})` : ""}
-                          </div>
-                        ) : null}
-                        {capture.notes ? (
-                          <div className="mt-0.5 line-clamp-2 max-w-[170px] text-muted-foreground">
-                            {capture.notes}
-                          </div>
-                        ) : !capture.picName ? (
-                          <div className="mt-1 text-muted-foreground">—</div>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="align-top">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Hapus lead"
-                          onClick={() => setDeleteTarget(capture)}
-                        >
-                          <Trash2 className="size-4 text-muted-foreground transition-colors hover:text-destructive" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-
-                    {isExpanded ? (
-                      <TableRow className="bg-muted/40">
-                        <TableCell colSpan={8} className="px-6 py-3 text-xs">
-                          <div className="grid gap-3 md:grid-cols-3">
-                            <div className="space-y-1">
-                              <div className="font-medium text-muted-foreground">Alamat & WhatsApp</div>
-                              <div>{capture.address || "—"}</div>
-                              <div className="text-muted-foreground">
-                                WA: {capture.whatsapp || capture.phone || "—"}
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="font-medium text-muted-foreground">PIC & Catatan Sales</div>
-                              <div>
-                                {capture.picName
-                                  ? `${capture.picName}${capture.picRole ? ` · ${capture.picRole}` : ""}`
-                                  : "Belum ada PIC"}
-                              </div>
-                              <div className="text-muted-foreground">
-                                {capture.notes || "Belum ada catatan"}
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="font-medium text-muted-foreground">Link Google Maps</div>
-                              {capture.mapsUrl ? (
-                                <a
-                                  href={capture.mapsUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-1 break-all text-foreground underline-offset-2 hover:underline"
-                                >
-                                  Buka di Maps <ExternalLink className="size-3 shrink-0" />
-                                </a>
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ) : null}
-                  </Fragment>
-                );
-              })}
-            </TableBody>
-          </Table>
+          {loading ? (
+            <div className="divide-y">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={`skeleton-${index}`} className="px-4 py-4">
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ))}
+            </div>
+          ) : captures.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-xs text-muted-foreground">
+              <span>
+                Belum ada lead. Buka Google Maps, cari bisnis, lalu klik salah satu hasilnya.
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void browser.tabs.create({ url: "https://www.google.com/maps" })}
+              >
+                Buka Google Maps
+              </Button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-xs text-muted-foreground">
+              <span>Tidak ada lead yang cocok dengan pencarian atau filter ini.</span>
+              <Button size="sm" variant="outline" onClick={resetFilters}>
+                Reset pencarian & filter
+              </Button>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {pageItems.map((capture) => (
+                <LeadRow
+                  key={capture.id}
+                  capture={capture}
+                  expanded={expandedId === capture.id}
+                  onToggle={() =>
+                    setExpandedId(expandedId === capture.id ? null : capture.id)
+                  }
+                  onDelete={() => setDeleteTarget(capture)}
+                />
+              ))}
+            </div>
+          )}
         </Card>
 
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">
-            Halaman {safePage + 1} dari {pageCount}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={safePage === 0}
-              onClick={() => setPage((value) => Math.max(0, value - 1))}
-            >
-              Sebelumnya
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={safePage >= pageCount - 1}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              Berikutnya
-            </Button>
+        {pageCount > 1 ? (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              Halaman {safePage + 1} dari {pageCount}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={safePage === 0}
+                onClick={() => setPage((value) => Math.max(0, value - 1))}
+              >
+                Sebelumnya
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={safePage >= pageCount - 1}
+                onClick={() => setPage((value) => value + 1)}
+              >
+                Berikutnya
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : null}
       </div>
 
       <AlertDialog
@@ -557,12 +500,220 @@ export default function DashboardApp() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void handleClearAll()}>
-              Hapus semua
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => void handleClearAll()}>Hapus semua</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function Detail({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0 space-y-1">
+      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </div>
+      <div className="break-words text-xs text-foreground">{children}</div>
+    </div>
+  );
+}
+
+function LeadRow({
+  capture,
+  expanded,
+  onToggle,
+  onDelete,
+}: {
+  capture: Capture;
+  expanded: boolean;
+  onToggle: () => void;
+  onDelete: () => void;
+}) {
+  const hot = !hasRealWebsite(capture);
+  const pic = capture.picName?.trim()
+    ? `${capture.picName}${capture.picRole ? ` (${capture.picRole})` : ""}`
+    : "Belum ada PIC";
+  const gapLabels = (capture.digitalGaps ?? []).map(digitalGapLabel);
+  const gapText = gapLabels.join(" · ") || "—";
+  const gapSummary =
+    gapLabels.length > 1 ? `${gapLabels[0]} +${gapLabels.length - 1}` : gapText;
+  const sourceHref = capture.website || capture.socialUrl;
+
+  return (
+    <div className={cn("transition-colors", expanded ? "bg-muted/25" : "hover:bg-muted/20")}>
+      <div className="flex items-start gap-2 px-3 py-3 sm:gap-3 sm:px-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mt-0.5 size-7 shrink-0"
+          aria-label={expanded ? "Tutup detail" : "Lihat detail"}
+          onClick={onToggle}
+        >
+          {expanded ? (
+            <ChevronDown className="size-4 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="size-4 text-muted-foreground" />
+          )}
+        </Button>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="min-w-0 truncate text-sm font-semibold">
+              {capture.companyName || "(tanpa nama)"}
+            </span>
+            {hot ? (
+              <Badge
+                variant="signal"
+                className="gap-1"
+                title="Belum punya website, biasanya cocok ditawari website"
+              >
+                <Flame className="size-3" /> HOT
+              </Badge>
+            ) : null}
+            <Badge variant="outline">{websiteStatusLabel(capture.websiteStatus)}</Badge>
+            <span
+              className="inline-flex items-center gap-1 text-xs font-medium"
+              title={`Prioritas ${capture.priority} dari 5 (${priorityLabel(capture.priority)})`}
+            >
+              <Star className="size-3.5 fill-foreground text-foreground" />
+              P{capture.priority}
+            </span>
+            <span
+              className="ml-auto hidden shrink-0 text-xs text-muted-foreground md:inline"
+              title={formatDate(capture.capturedAt)}
+            >
+              {formatShortDate(capture.capturedAt)}
+            </span>
+          </div>
+
+          <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground sm:gap-x-5 xl:grid-cols-4">
+            <div className="min-w-0 truncate">
+              <span className="text-muted-foreground/70">Tel </span>
+              <span className="font-medium text-foreground">{capture.phone || "—"}</span>
+            </div>
+            <div className="min-w-0 truncate">
+              <span className="text-muted-foreground/70">Sumber </span>
+              {sourceHref ? (
+                <a
+                  href={sourceHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex max-w-full items-center gap-1 align-bottom text-foreground underline-offset-2 hover:underline"
+                  title={sourceHref}
+                >
+                  <span className="truncate">{sourceLabel(capture)}</span>
+                  <ExternalLink className="size-3 shrink-0" />
+                </a>
+              ) : (
+                <span>Tidak ada</span>
+              )}
+            </div>
+            <div className="min-w-0 truncate">
+              <span className="text-muted-foreground/70">PIC </span>
+              <span className="text-foreground">{pic}</span>
+            </div>
+            <div className="min-w-0 truncate" title={gapText}>
+              <span className="text-muted-foreground/70">Celah </span>
+              <span className="text-foreground">{gapSummary}</span>
+            </div>
+          </div>
+
+          {capture.notes ? (
+            <div className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+              <span className="font-medium">Catatan:</span> {capture.notes}
+            </div>
+          ) : null}
+        </div>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="shrink-0"
+          title="Hapus lead"
+          onClick={onDelete}
+        >
+          <Trash2 className="size-4 text-muted-foreground transition-colors hover:text-destructive" />
+        </Button>
+      </div>
+
+      {expanded ? (
+        <div className="border-t bg-muted/20 px-4 py-3 sm:pl-12">
+          <div className="grid gap-4 text-xs sm:grid-cols-2 lg:grid-cols-4">
+            <Detail label="Alamat">{capture.address || "—"}</Detail>
+            <Detail label="WhatsApp">{capture.whatsapp || capture.phone || "—"}</Detail>
+            <Detail label="Website / Sosmed">
+              {capture.website || capture.socialUrl ? (
+                <a
+                  href={capture.website || capture.socialUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 break-all text-foreground underline-offset-2 hover:underline"
+                >
+                  {capture.website || capture.socialUrl}
+                  <ExternalLink className="size-3 shrink-0" />
+                </a>
+              ) : (
+                "—"
+              )}
+            </Detail>
+            <Detail label="Instagram">{capture.instagram || "—"}</Detail>
+            <Detail label="Status Website">{websiteStatusLabel(capture.websiteStatus)}</Detail>
+            <Detail label="Prioritas">
+              P{capture.priority} · {priorityLabel(capture.priority)}
+            </Detail>
+            <Detail label="Celah Digital">
+              {capture.digitalGaps.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {capture.digitalGaps.map((gap) => (
+                    <span
+                      key={gap}
+                      className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-[11px]"
+                    >
+                      {digitalGapLabel(gap)}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                "—"
+              )}
+            </Detail>
+            <Detail label="Peluang Solusi">
+              {capture.services.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {capture.services.map((service) => (
+                    <span
+                      key={service}
+                      className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-[11px]"
+                    >
+                      {serviceLabel(service)}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                "—"
+              )}
+            </Detail>
+            <Detail label="PIC & Jabatan">{pic}</Detail>
+            <Detail label="Catatan Sales">{capture.notes || "Belum ada catatan"}</Detail>
+            <Detail label="Disimpan">{formatDate(capture.capturedAt)}</Detail>
+            <Detail label="Link Google Maps">
+              {capture.mapsUrl ? (
+                <a
+                  href={capture.mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-foreground underline-offset-2 hover:underline"
+                >
+                  Buka di Maps <ExternalLink className="size-3 shrink-0" />
+                </a>
+              ) : (
+                "—"
+              )}
+            </Detail>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
