@@ -9,10 +9,11 @@ export default defineConfig({
   manifest: {
     name: "SDR Lead Capture",
     description:
-      "Capture B2B leads from Google Maps, score their digital presence, and export to CSV. Fully offline.",
-    version: "1.0.1",
+      "Capture B2B leads from Google Maps and export them to CSV. Fully offline, no data leaves your browser.",
+    version: "1.0.2",
     icons: {
       "16": "icon16.png",
+      "32": "icon32.png",
       "48": "icon48.png",
       "128": "icon128.png",
     },

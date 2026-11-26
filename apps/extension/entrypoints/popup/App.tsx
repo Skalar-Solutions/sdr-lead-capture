@@ -8,7 +8,7 @@ import { browser } from "wxt/browser";
 
 import { CaptureCard } from "@/components/capture-card";
 import type { ScrapedPlace } from "@/entrypoints/content/scraper";
-import { toCapture, type Capture } from "@/lib/capture";
+import { isCaptureUseful, toCapture, type Capture } from "@/lib/capture";
 import { buildCsvFilename, capturesToCsv } from "@/lib/csv-template";
 import { downloadCsvFile } from "@/lib/download";
 import { addCapture, countCaptures, openDashboard, readCaptures } from "@/lib/store";
@@ -51,8 +51,16 @@ export default function App() {
           | undefined;
 
         if (response?.ok && response.data?.companyName) {
-          setCapture(toCapture(response.data));
-          setSource({ tone: "info", text: `Terekstrak: ${response.data.companyName}` });
+          const next = toCapture(response.data);
+          if (!isCaptureUseful(next)) {
+            setSource({
+              tone: "warn",
+              text: "Data tempat belum lengkap. Tunggu panel detail terbuka, lalu buka popup lagi.",
+            });
+          } else {
+            setCapture(next);
+            setSource({ tone: "info", text: `Terekstrak: ${response.data.companyName}` });
+          }
         } else {
           setSource({
             tone: "warn",
@@ -79,12 +87,18 @@ export default function App() {
     if (!capture) return;
     setSaving(true);
     try {
-      const count = await addCapture(capture);
-      setSavedCount(count);
+      const result = await addCapture(capture);
+      setSavedCount(result.count);
       setSaved(true);
-      toast.success("Masuk CSV", {
-        description: `${capture.companyName}${capture.website ? "" : " · tidak punya website"}`,
-      });
+      if (result.duplicate) {
+        toast.info("Sudah ada di CSV", {
+          description: `${capture.companyName} tidak disimpan dua kali.`,
+        });
+      } else {
+        toast.success("Masuk CSV", {
+          description: `${capture.companyName}${capture.website ? "" : " · tidak punya website"}`,
+        });
+      }
     } catch (error) {
       toast.error("Gagal menyimpan", {
         description: error instanceof Error ? error.message : String(error),

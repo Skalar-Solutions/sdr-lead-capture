@@ -1,8 +1,13 @@
 import { browser } from "wxt/browser";
 
-import type { Capture } from "./capture";
+import { isDuplicateCapture, type Capture } from "./capture";
 
 const CAPTURES_KEY = "sdr_captures";
+
+export interface AddCaptureResult {
+  count: number;
+  duplicate: boolean;
+}
 
 export async function readCaptures(): Promise<Capture[]> {
   const stored = await browser.storage.local.get(CAPTURES_KEY);
@@ -14,11 +19,16 @@ export async function writeCaptures(captures: Capture[]): Promise<void> {
   await browser.storage.local.set({ [CAPTURES_KEY]: captures });
 }
 
-export async function addCapture(capture: Capture): Promise<number> {
+export async function addCapture(capture: Capture): Promise<AddCaptureResult> {
   const captures = await readCaptures();
+
+  if (isDuplicateCapture(captures, capture)) {
+    return { count: captures.length, duplicate: true };
+  }
+
   const next = [capture, ...captures];
   await writeCaptures(next);
-  return next.length;
+  return { count: next.length, duplicate: false };
 }
 
 export async function countCaptures(): Promise<number> {

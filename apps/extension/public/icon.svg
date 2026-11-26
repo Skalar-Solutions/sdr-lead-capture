@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1920" fill="none">
+  <!-- Ikon aplikasi: glyph putih di atas bidang hitam, aman untuk toolbar terang & gelap. -->
+  <rect width="1920" height="1920" rx="384" fill="#000000"/>
+  <g fill="#FFFFFF" transform="translate(153.6 153.6) scale(0.84)">
+    <path d="M556 152H959V554L556 957H153V554Z"/>
+    <path d="M1375 153H1776V555L1375 958H972V555Z"/>
+    <path d="M556 957H967V1365L556 1775H146V1365Z"/>
+    <path d="M1375 958H1783V1366L1375 1775H964V1366Z"/>
+  </g>
+</svg>

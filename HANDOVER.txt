@@ -1,9 +1,9 @@
 ================================================================================
 HANDOVER - SDR LEAD CAPTURE (CSV EDITION)
-Tanggal : 25 November 2026
-Versi   : 1.0.1
+Tanggal : 26 November 2026
+Versi   : 1.0.2
 Bentuk  : extension Chrome mandiri (tanpa backend)
-Repo    : /Users/bytedance/Vano/Code/sdr-lead-capture (branch: staging)
+Repo    : /Users/bytedance/Vano/Code/sdr-lead-capture (branch: main)
 ================================================================================
 
 RINGKASAN
@@ -19,11 +19,15 @@ FILE RILIS
 ----------
 Zip siap upload / share:
 
-  release/sdr-lead-capture-csv-1.0.1-chrome.zip   (219 KB)
+  release/sdr-lead-capture-csv-1.0.2-chrome.zip   (231 KB)
 
 Checksum SHA-256:
 
-  aa6ece19247452aaecb23523080fcd502265b07f8d637e51c7816cbb134d6d4e
+  3dad205dc718ce11d05e6a4be9792956096f2fea3999eb76713ce92b5bfc06d4
+
+Folder unpacked untuk internal:
+
+  release/sdr-lead-capture-1.0.2/
 
 Cara pakai zip:
   A. Chrome Web Store -> upload zip ini sebagai package.
@@ -32,6 +36,7 @@ Cara pakai zip:
 
 Alternatif tanpa zip:
   chrome://extensions -> Load unpacked -> apps/extension/.output/chrome-mv3
+  atau folder root repo (hasil `pnpm sync-root`).
 
 CARA PAKAI
 ----------
@@ -119,9 +124,10 @@ PERMISSION EXTENSION
 
 SUDAH DIVERIFIKASI
 ------------------
-- 40 tes core + 9 tes scraper, semua hijau.
+- 40 tes core + 27 tes extension (scraper + dedupe), semua hijau.
 - Typecheck bersih.
-- Build produksi + zip bersih (219 KB).
+- Build produksi bersih (~766 KB) + zip 231 KB.
+- CI GitHub Actions: test + typecheck + build + zip (artifact).
 - E2E Chromium headless:
     popup render
     -> drawer scrape fixture Maps
@@ -129,19 +135,49 @@ SUDAH DIVERIFIKASI
     -> baris muncul di dashboard
     -> download CSV
     -> isi CSV sesuai template (header + data benar)
-- Screenshot bukti: artifacts/popup.png, maps-drawer.png, dashboard.png
+- Smoke test Google Maps ASLI (pnpm smoke:maps):
+    scrape tempat nyata
+    -> nama/alamat/telepon bersih (tanpa glyph ikon)
+    -> simpan 1 baris
+    -> simpan ulang tempat yang sama tidak menambah baris (dedupe)
+- Smoke test juga lolos untuk UI English (`?hl=en`) dan domain google.co.id.
+- Icon final 16/32/48/128 (putih di atas hitam, aman untuk toolbar terang
+  maupun gelap). Sumber: apps/extension/public/icon.svg
+- Screenshot bukti: artifacts/popup.png, maps-drawer.png, dashboard.png,
+  artifacts/smoke-maps.png
+
+SMOKE TEST MAPS ASLI
+--------------------
+Jalankan manual sebelum rilis (butuh internet):
+
+  pnpm build
+  pnpm smoke:maps
+
+Varian opsional:
+
+  SMOKE_SEARCH_URL="https://www.google.com/maps/search/steakhouse+jakarta?hl=en" \
+    pnpm smoke:maps
+  SMOKE_SEARCH_URL="https://www.google.co.id/maps/search/steakhouse+jakarta" \
+    pnpm smoke:maps
+
+Script membuka Google Maps asli, memilih tempat pertama, menyimpan, lalu
+menyimpan ulang untuk memastikan dedupe bekerja. Gagal = exit non-zero.
+Bukti hasil: artifacts/smoke-maps.png dan artifacts/smoke-maps.json.
 
 BATASAN / CATATAN
 -----------------
 1. Scraper bergantung pada class DOM Google Maps. Kalau Google mengubah markup,
    perbaiki selector di entrypoints/content/scraper.ts.
-2. Icon masih placeholder (lingkaran biru). Perlu icon final sebelum publish.
-3. Untuk Chrome Web Store perlu: icon, screenshot 1280x800, privacy policy
-   (walau tidak ada data keluar), dan description.
-4. Tidak ada dedupe otomatis. Kalau tempat yang sama di-capture dua kali,
-   akan muncul dua baris. Bisa dibersihkan manual di dashboard.
-5. Tidak ada fitur edit. Kalau salah, hapus baris lalu capture ulang.
-6. Bundle total ~757 KB (content script 283 KB, shared chunk 302 KB).
+2. Icon sudah final. Untuk Chrome Web Store masih perlu screenshot 1280x800,
+   privacy policy yang di-host di URL publik (teks siap di PRIVACY.md), dan
+   store listing/description.
+3. Dedupe otomatis aktif. Tempat dikenali dari place ID di link Maps; kalau
+   link tidak lengkap, fallback ke nama + telepon + alamat. Capture ulang
+   tempat yang sama tidak menambah baris.
+4. Tidak ada fitur edit. Kalau salah, hapus baris lalu capture ulang.
+5. Bundle total ~766 KB (content script 285 KB, shared chunk 304 KB).
+6. Zip rilis 1.0.2 sudah berisi perbaikan P0/P1 dan icon baru. Regenerate
+   dengan `pnpm build && pnpm zip` + update release/ sebelum distribusi.
 
 OPSIONAL: MEMBERESKAN INFRA LAMA
 --------------------------------

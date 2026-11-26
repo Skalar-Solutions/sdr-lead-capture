@@ -12,6 +12,7 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "e2e": "node scripts/e2e-extension.mjs",
+    "smoke:maps": "node scripts/smoke-maps.mjs",
     "sync-root": "cp -R apps/extension/.output/chrome-mv3/. ."
   },
   "devDependencies": {

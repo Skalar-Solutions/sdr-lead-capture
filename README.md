@@ -38,7 +38,7 @@ Sisanya dibiarkan kosong karena memang tidak ada di Google Maps.
 
 Saat ini extension dipasang manual (belum di Chrome Web Store).
 
-1. Minta file **`sdr-lead-capture-csv-1.0.1-chrome.zip`** ke yang mengirim ini.
+1. Minta file **`sdr-lead-capture-csv-1.0.2-chrome.zip`** ke yang mengirim ini.
 2. **Extract** file zip itu ke folder yang gampang diingat, misalnya
    `Dokumen/SDR Lead Capture`.
    Penting: jangan hapus folder ini setelah dipasang.
@@ -143,6 +143,8 @@ Data ini tersimpan di Chrome. Kalau extension di-uninstall, datanya ikut hilang.
 - Extension hanya membaca halaman Google Maps yang sedang kamu buka.
 - Semua hasil scrape disimpan di Chrome di komputer kamu sendiri.
 
+Kebijakan privasi lengkap ada di [`PRIVACY.md`](PRIVACY.md).
+
 ---
 
 ## Pertanyaan yang sering muncul
@@ -162,6 +164,11 @@ Bisa, lewat download CSV. Data tidak otomatis pindah sendiri.
 **Kalau salah simpan?**
 Buka halaman **Data**, hapus barisnya, lalu capture ulang.
 
+**Kalau tempat yang sama ke-capture dua kali?**
+Yang kedua otomatis dilewati, jadi CSV tidak berisi baris ganda. Duplikat
+dikenali dari link tempat Google Maps (atau nama + telepon + alamat kalau
+link-nya tidak lengkap).
+
 ---
 
 ## Untuk yang paham teknis
@@ -169,4 +176,5 @@ Buka halaman **Data**, hapus barisnya, lalu capture ulang.
 - Kode ada di `apps/extension` (WXT + React).
 - Kolom CSV diatur di `apps/extension/lib/csv-template.ts`.
 - Build: `pnpm install && pnpm build && pnpm zip`.
+- Smoke test ke Google Maps asli: `pnpm build && pnpm smoke:maps`.
 - Detail teknis, arsitektur, dan checklist serah terima ada di `HANDOVER.txt`.

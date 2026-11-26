@@ -4,7 +4,7 @@ import { ClipboardList, RefreshCw, Target, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { CaptureCard } from "@/components/capture-card";
-import { toCapture, type Capture } from "@/lib/capture";
+import { isCaptureUseful, toCapture, type Capture } from "@/lib/capture";
 import { addCapture, countCaptures, openDashboard } from "@/lib/store";
 
 import { extractBusinessData } from "../scraper";
@@ -27,13 +27,18 @@ export function ContentApp() {
 
   const scrape = useCallback(() => {
     const data = extractBusinessData(document, location.href);
-    if (!data.companyName) {
+    const next = toCapture(data);
+    if (!data.companyName || !isCaptureUseful(next)) {
       setCapture(null);
       setSaved(false);
-      setNotice("Klik salah satu tempat di Maps dulu.");
+      setNotice(
+        data.companyName
+          ? "Data tempat belum lengkap. Tunggu panel detail terbuka, lalu coba lagi."
+          : "Klik salah satu tempat di Maps dulu.",
+      );
       return;
     }
-    setCapture(toCapture(data));
+    setCapture(next);
     setSaved(false);
     setNotice(
       `Terekstrak: ${data.companyName}${data.isSocialMediaOnly ? ` · ${data.socialType} only` : ""}`,
@@ -49,10 +54,14 @@ export function ContentApp() {
     if (!capture) return;
     setSaving(true);
     try {
-      const count = await addCapture(capture);
-      setSavedCount(count);
+      const result = await addCapture(capture);
+      setSavedCount(result.count);
       setSaved(true);
-      setNotice(`Tersimpan ke CSV: ${capture.companyName}`);
+      setNotice(
+        result.duplicate
+          ? `Sudah ada di CSV: ${capture.companyName}`
+          : `Tersimpan ke CSV: ${capture.companyName}`,
+      );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));
     } finally {
