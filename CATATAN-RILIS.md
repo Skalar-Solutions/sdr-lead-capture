@@ -5,6 +5,32 @@ Detail teknis ada di [`HANDOVER.txt`](HANDOVER.txt).
 
 ---
 
+## 1.0.7 — 26 November 2026
+
+**Fokus: perbaikan mode Ambil Semua untuk bisnis yang pernah diklik.**
+
+Yang berubah:
+
+- **Bisnis yang linknya pernah dikunjungi sekarang tetap terbaca.** Sebelumnya
+  Google Maps menambahkan akhiran `·Link yang dikunjungi` (UI Indonesia) atau
+  `·Visited link` (UI Inggris) pada nama link hasil pencarian. Akhiran itu ikut
+  terbaca sebagai nama bisnis, sehingga proses **Ambil Semua** gagal mencocokkan
+  panel detail dan menandai bisnis sebagai **Tidak terbaca**.
+- **Nama bisnis di checklist jadi bersih** tanpa akhiran tersebut.
+- **Test baru** untuk akhiran versi Indonesia dan Inggris.
+
+Tidak ada perubahan format data atau CSV. Data lama tetap aman.
+
+**Cara update dari 1.0.6:**
+
+1. Download `sdr-lead-capture-1.0.7-chrome.zip`.
+2. Extract ke folder baru (jangan timpa folder lama).
+3. Buka `chrome://extensions` → hapus extension lama → **Load unpacked** →
+   pilih folder baru.
+4. Data lama tetap ada.
+
+---
+
 ## 1.0.6 — 26 November 2026
 
 **Fokus: evaluasi & tagging lead SDR langsung saat capture + dua format CSV.**

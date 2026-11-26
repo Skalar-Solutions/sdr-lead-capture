@@ -107,7 +107,7 @@ https://github.com/Skalar-Solutions/sdr-lead-capture/issues
 ## Submission checklist
 
 - [ ] Aktifkan GitHub Pages dan buka URL privacy policy.
-- [ ] Upload `release/sdr-lead-capture-1.0.6-chrome.zip`.
+- [ ] Upload `release/sdr-lead-capture-1.0.7-chrome.zip`.
 - [ ] Isi listing dengan teks di atas.
 - [ ] Upload ketiga aset di `store/`.
 - [ ] Pilih kategori Productivity, bahasa Indonesian.

@@ -15,7 +15,7 @@ Google Sheets.
 
 > Sudah dipasang oleh admin? Lewati ke bagian **2. Ambil satu bisnis**.
 
-1. Minta file **`sdr-lead-capture-1.0.6-chrome.zip`** ke admin.
+1. Minta file **`sdr-lead-capture-1.0.7-chrome.zip`** ke admin.
 2. **Extract** file itu ke folder yang mudah diingat, misalnya
    `Dokumen/SDR Lead Capture`.
    **Jangan hapus folder ini** setelah dipasang.
