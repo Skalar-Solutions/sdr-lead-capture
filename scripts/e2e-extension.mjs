@@ -50,6 +50,8 @@ try {
   </body></html>`;
 
   const maps = await context.newPage();
+  const mapsErrors = [];
+  maps.on("pageerror", (error) => mapsErrors.push(error.message));
   await maps.route("**/maps/place/**", (route) =>
     route.fulfill({ status: 200, contentType: "text/html", body: fixture }),
   );
@@ -72,10 +74,118 @@ try {
   });
   console.log("storage sdr_captures:", stored);
 
-  // 3. Dashboard harus menampilkan hasil
-  const dashboard = await context.newPage();
-  await dashboard.goto(`chrome-extension://${extensionId}/dashboard.html`);
+  // 2b. Bulk scrape dari daftar hasil pencarian
+  const places = [
+    { id: "0x1:0xa1", name: "Kopi Cipete Satu", phone: "0811-1111-111", web: "" },
+    {
+      id: "0x1:0xa2",
+      name: "Kopi Cipete Dua",
+      phone: "0812-2222-222",
+      web: "https://kopidua.com/",
+    },
+    {
+      id: "0x1:0xa3",
+      name: "Kopi Cipete Tiga",
+      phone: "",
+      web: "https://www.instagram.com/kopitiga/",
+    },
+  ];
+  const searchFixture = `<!doctype html><html><head><meta charset="utf-8"><title>Search fixture</title></head>
+  <body style="margin:0;display:flex;font-family:sans-serif">
+    <div role="main" aria-label="Hasil" style="width:360px;height:100vh;overflow:auto">
+      <div role="feed">
+        ${places
+          .map(
+            (place) => `<div class="Nv2PK"><a class="hfpxzc" aria-label="${place.name}"
+              href="https://www.google.com/maps/place/${encodeURIComponent(place.name)}/data=!4m7!3m6!1s${place.id}!8m2">${place.name}</a></div>`,
+          )
+          .join("")}
+        <span>Anda telah mencapai akhir daftar.</span>
+      </div>
+    </div>
+    <div id="detail" style="flex:1;padding:24px"></div>
+    <script>
+      const PLACES = ${JSON.stringify(places)};
+      document.addEventListener("click", (event) => {
+        const a = event.target.closest("a.hfpxzc");
+        if (!a) return;
+        event.preventDefault();
+        const place = PLACES.find((item) => item.name === a.getAttribute("aria-label"));
+        history.pushState({}, "", a.href);
+        const detail = document.getElementById("detail");
+        detail.innerHTML = "";
+        setTimeout(() => {
+          detail.innerHTML = '<div role="main">' +
+            '<h1 class="DUwDvf">' + place.name + '</h1>' +
+            '<button jsaction="pane.rating.category">Kedai kopi</button>' +
+            '<div class="F7nice"><span aria-hidden="true">4,6</span><span>(321)</span></div>' +
+            '<button data-item-id="address">\\ue0c8Jl. Cipete Raya</button>' +
+            (place.phone ? '<button data-item-id="phone:tel:' + place.phone + '">' + place.phone + '</button>' : '') +
+            (place.web ? '<a data-item-id="authority" href="' + place.web + '">web</a>' : '') +
+            '</div>';
+        }, 300);
+      });
+    </script>
+  </body></html>`;
+
+  const search = await context.newPage();
+  await search.route("**/maps/search/**", (route) =>
+    route.fulfill({ status: 200, contentType: "text/html", body: searchFixture }),
+  );
+  await search.route("**/maps/place/**", (route) =>
+    route.fulfill({ status: 200, contentType: "text/html", body: searchFixture }),
+  );
+  await search.goto("https://www.google.com/maps/search/coffee+shop+cipete/", {
+    waitUntil: "domcontentloaded",
+  });
+  await search.waitForSelector("sdr-capture-ui", { state: "attached", timeout: 15000 });
+  await search.getByRole("button", { name: /Scrape Semua/ }).waitFor({ timeout: 15000 });
+
+  // Auto-detect: klik hasil pencarian -> drawer terbuka otomatis.
+  await search.locator("a.hfpxzc").first().click();
+  await search.getByRole("button", { name: "Simpan ke CSV" }).waitFor({ timeout: 15000 });
+  await search.getByText("Terekstrak: Kopi Cipete Satu").first().waitFor({ timeout: 10000 });
+  console.log("auto-detect: klik tempat membuka drawer");
+  await search.getByTitle("Tutup").click();
+
+  await search.getByRole("button", { name: /Scrape Semua/ }).click();
+  await search.getByRole("button", { name: "Mulai Scrape" }).click();
+  await search.getByRole("button", { name: /Simpan 3 ke CSV/ }).waitFor({ timeout: 30000 });
+  await search.screenshot({ path: path.join(outDir, "bulk-review.png") });
+  await search.getByRole("button", { name: /Simpan 3 ke CSV/ }).click();
+  await search.waitForSelector("text=3 lead tersimpan", { timeout: 10000 });
+  console.log("bulk: 3 lead tersimpan");
+
+  // Scrape ulang -> semua harus terdeteksi duplikat.
+  await search.getByRole("button", { name: "Scrape lagi" }).click();
+  await search.getByRole("button", { name: "Mulai Scrape" }).click();
+  await search.waitForSelector("text=Pilih semua (0)", { timeout: 30000 });
+  console.log("bulk: scrape ulang -> semua duplikat dilewati");
+
+  const bulkStored = await popup.evaluate(async () => {
+    const { sdr_captures } = await chrome.storage.local.get("sdr_captures");
+    return Array.isArray(sdr_captures) ? sdr_captures.map((item) => item.companyName) : [];
+  });
+  console.log("storage setelah bulk:", bulkStored);
+  if (bulkStored.length !== 4) {
+    throw new Error(`Harusnya 4 baris, dapat ${bulkStored.length}`);
+  }
+
+  // 3. Tombol "Data" di drawer harus membuka dashboard dari content script
+  await maps.bringToFront();
+  const [dashboard] = await Promise.all([
+    context.waitForEvent("page"),
+    maps.getByTitle("Buka data & download CSV").click(),
+  ]);
+  await dashboard.waitForLoadState("domcontentloaded");
+  if (!dashboard.url().endsWith("/dashboard.html")) {
+    throw new Error(`Drawer membuka halaman yang salah: ${dashboard.url()}`);
+  }
   await dashboard.waitForSelector("text=Warung Steak Pak Joko", { timeout: 15000 });
+  if (mapsErrors.length > 0) {
+    throw new Error(`Content script error: ${mapsErrors.join(" | ")}`);
+  }
+  console.log("drawer: tombol Data membuka dashboard");
   console.log("dashboard: baris tampil");
   await dashboard.screenshot({ path: path.join(outDir, "dashboard.png"), fullPage: true });
 
@@ -96,7 +206,11 @@ try {
 
   fs.writeFileSync(
     path.join(outDir, "e2e.json"),
-    JSON.stringify({ extensionId, stored, csvHeader: lines[0], csvRow: lines[1] }, null, 2),
+    JSON.stringify(
+      { extensionId, stored: bulkStored.length, csvHeader: lines[0], csvRow: lines[1] },
+      null,
+      2,
+    ),
   );
 } finally {
   await context.close();

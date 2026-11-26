@@ -55,6 +55,26 @@ export function isCaptureUseful(
 
 const PLACE_ID_RE = /!1s(0x[0-9a-f]+:0x[0-9a-f]+)/i;
 
+export function placeIdFromUrl(url: string | null | undefined): string {
+  return (url ?? "").match(PLACE_ID_RE)?.[1]?.toLowerCase() ?? "";
+}
+
+export function normalizeName(value: string | null | undefined): string {
+  return (value ?? "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+export function hasPlaceId(
+  placeId: string,
+  existing: readonly Pick<Capture, "mapsUrl">[],
+): boolean {
+  if (!placeId) return false;
+  return existing.some((capture) => placeIdFromUrl(capture.mapsUrl) === placeId);
+}
+
 /**
  * Kunci identitas tempat untuk dedupe.
  *
@@ -108,6 +128,12 @@ export function captureIdentity(
   const placeKey = normalizeMapsUrl(capture.mapsUrl);
   if (placeKey) return placeKey;
 
+  return fallbackIdentity(capture);
+}
+
+function fallbackIdentity(
+  capture: Pick<Capture, "companyName" | "address" | "phone">,
+): string {
   const name = capture.companyName.trim().toLowerCase().replace(/\s+/g, " ");
   if (!name) return "";
 
@@ -116,8 +142,23 @@ export function captureIdentity(
   return `fallback:${name}|${phone}|${address}`;
 }
 
+function isSamePlace(
+  a: Pick<Capture, "companyName" | "address" | "phone" | "mapsUrl">,
+  b: Pick<Capture, "companyName" | "address" | "phone" | "mapsUrl">,
+): boolean {
+  const placeA = normalizeMapsUrl(a.mapsUrl);
+  const placeB = normalizeMapsUrl(b.mapsUrl);
+
+  // Kalau dua-duanya punya place ID, hanya place ID yang menentukan. Ini
+  // menjaga dua cabang bisnis yang sama tetap dianggap berbeda.
+  if (placeA && placeB) return placeA === placeB;
+
+  // Kalau salah satu tidak punya place ID (mis. URL search vs URL place),
+  // fallback ke nama + telepon + alamat supaya tetap terdeteksi duplikat.
+  const fallbackA = fallbackIdentity(a);
+  return Boolean(fallbackA) && fallbackA === fallbackIdentity(b);
+}
+
 export function isDuplicateCapture(existing: readonly Capture[], candidate: Capture): boolean {
-  const key = captureIdentity(candidate);
-  if (!key) return false;
-  return existing.some((capture) => captureIdentity(capture) === key);
+  return existing.some((capture) => isSamePlace(capture, candidate));
 }

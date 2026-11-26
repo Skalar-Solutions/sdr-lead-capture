@@ -83,8 +83,19 @@ try {
   }
 
   await maps.locator("sdr-capture-ui").waitFor({ state: "attached", timeout: 15000 });
-  await maps.getByRole("button", { name: /SDR Capture/ }).click();
-  await maps.getByRole("button", { name: /Simpan ke CSV/ }).waitFor({ timeout: 15000 });
+
+  // Auto-detect biasanya membuka drawer sendiri. Kalau belum, klik pill.
+  const saveButton = maps.getByRole("button", { name: /Simpan ke CSV/ });
+  const capturePill = maps.getByRole("button", { name: /SDR Capture/ });
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (await saveButton.isVisible().catch(() => false)) break;
+    if (await capturePill.isVisible().catch(() => false)) {
+      await capturePill.click();
+      break;
+    }
+    await maps.waitForTimeout(400);
+  }
+  await saveButton.waitFor({ timeout: 15000 });
 
   const leaves = await maps
     .locator("sdr-capture-ui *")

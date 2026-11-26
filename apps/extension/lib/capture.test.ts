@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   captureIdentity,
+  hasPlaceId,
   isCaptureUseful,
   isDuplicateCapture,
   normalizeMapsUrl,
+  normalizeName,
+  placeIdFromUrl,
   type Capture,
 } from "./capture";
 
@@ -109,6 +112,13 @@ describe("isDuplicateCapture", () => {
     expect(isDuplicateCapture(existing, recaptured)).toBe(true);
   });
 
+  it("menjembatani URL place dan URL tanpa place ID", () => {
+    const existing = [makeCapture({ mapsUrl: "https://www.google.com/maps/search/steak" })];
+    const recaptured = makeCapture({ id: "id-2" });
+    expect(isDuplicateCapture(existing, recaptured)).toBe(true);
+    expect(isDuplicateCapture([makeCapture()], existing[0]!)).toBe(true);
+  });
+
   it("tidak menganggap bisnis berbeda sebagai duplikat", () => {
     const existing = [makeCapture()];
     const other = makeCapture({
@@ -117,6 +127,23 @@ describe("isDuplicateCapture", () => {
       mapsUrl: "https://www.google.com/maps/place/Warung+Steak+Pak+Joko",
     });
     expect(isDuplicateCapture(existing, other)).toBe(false);
+  });
+});
+
+describe("place helpers", () => {
+  it("mengambil place ID dari URL Maps", () => {
+    expect(placeIdFromUrl(PLACE_URL)).toBe("0x2e69f7193402b0a7:0x7277aea653cd756e");
+    expect(placeIdFromUrl("https://www.google.com/maps/search/steak")).toBe("");
+  });
+
+  it("menormalisasi nama untuk pencocokan panel", () => {
+    expect(normalizeName("  Chuck's Cattle — Benhil ")).toBe("chuck s cattle benhil");
+  });
+
+  it("mendeteksi place ID yang sudah pernah disimpan", () => {
+    const existing = [makeCapture()];
+    expect(hasPlaceId(placeIdFromUrl(PLACE_URL), existing)).toBe(true);
+    expect(hasPlaceId("0x1:0xdeadbeef", existing)).toBe(false);
   });
 });
 
