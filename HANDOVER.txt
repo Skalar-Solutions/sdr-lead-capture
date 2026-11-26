@@ -184,7 +184,7 @@ CHROME WEB STORE
 - Promo tile : store/promo-440x280.png
 - Listing    : store/listing.md (deskripsi, kategori, permission justification)
 - Privacy    : docs/privacy.html
-- URL privacy: https://skalar-solutions.github.io/ext-sdr-leadcapture/privacy.html
+- URL privacy: https://skalar-solutions.github.io/sdr-lead-capture/privacy.html
   Aktifkan GitHub Pages: Settings -> Pages -> Deploy from a branch ->
   main -> folder /docs -> Save.
 - Generate ulang aset: `node scripts/store-assets.mjs`

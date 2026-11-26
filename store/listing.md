@@ -83,14 +83,14 @@ script remote, atau CDN.
 
 ## Privacy policy URL
 
-https://skalar-solutions.github.io/ext-sdr-leadcapture/privacy.html
+https://skalar-solutions.github.io/sdr-lead-capture/privacy.html
 
 Aktifkan GitHub Pages sekali di repository:
 Settings → Pages → Deploy from a branch → `main` → folder `/docs` → Save.
 
 ## Support URL
 
-https://github.com/Skalar-Solutions/ext-sdr-leadcapture/issues
+https://github.com/Skalar-Solutions/sdr-lead-capture/issues
 
 ## Assets
 

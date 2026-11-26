@@ -47,7 +47,7 @@ Perubahan akan dicatat di repository dan tanggal di atas akan diperbarui.
 ## Kontak
 
 Pertanyaan atau permintaan terkait privasi:
-https://github.com/Skalar-Solutions/ext-sdr-leadcapture/issues
+https://github.com/Skalar-Solutions/sdr-lead-capture/issues
 
 ---
 
@@ -68,4 +68,4 @@ Permissions: `storage` for local data; host access to Google Maps pages only to
 read the page you are viewing and show the capture button. No network, identity,
 downloads, cookies, or tabs permissions are requested.
 
-Contact: https://github.com/Skalar-Solutions/ext-sdr-leadcapture/issues
+Contact: https://github.com/Skalar-Solutions/sdr-lead-capture/issues
