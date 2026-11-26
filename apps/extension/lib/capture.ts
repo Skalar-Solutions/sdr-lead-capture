@@ -183,12 +183,26 @@ export function hasRealWebsite(
   );
 }
 
+export function hasAnyContact(
+  capture: Pick<Capture, "phone" | "whatsapp" | "instagram" | "socialUrl" | "website">,
+): boolean {
+  return Boolean(
+    capture.phone.trim() ||
+      capture.whatsapp?.trim() ||
+      capture.instagram.trim() ||
+      capture.socialUrl.trim() ||
+      capture.website.trim(),
+  );
+}
+
 /**
- * Wajib punya nama bisnis dan nomor telepon. Baris tanpa nomor telepon
- * (atau baris sampah seperti heading "Hasil") tidak di-scrape/disimpan.
+ * Wajib punya nama bisnis dan minimal satu kontak (telepon, WA, IG/sosmed,
+ * atau website). Bisnis tanpa kontak sama sekali tidak di-scrape/disimpan.
  */
-export function isCaptureUseful(capture: Pick<Capture, "companyName" | "phone">): boolean {
-  return Boolean(capture.companyName.trim() && capture.phone.trim());
+export function isCaptureUseful(
+  capture: Pick<Capture, "companyName" | "phone" | "whatsapp" | "instagram" | "socialUrl" | "website">,
+): boolean {
+  return Boolean(capture.companyName.trim() && hasAnyContact(capture));
 }
 
 const PLACE_ID_RE = /!1s(0x[0-9a-f]+:0x[0-9a-f]+)/i;

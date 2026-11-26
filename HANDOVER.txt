@@ -102,7 +102,9 @@ Catatan migrasi & filter:
 - readCaptures() otomatis menormalisasi record lama (sebelum 1.0.6) lewat
   normalizeCapture() sehingga field tagging selalu terisi aman tanpa crash.
 - Nomor telepon dinormalisasi menjadi angka murni (digitsOnly).
-- Bisnis tanpa nomor telepon dilewati (isCaptureUseful mewajibkan phone).
+- Bisnis tanpa kontak sama sekali (phone, whatsapp, instagram, socialUrl, dan
+  website kosong semua) dilewati (isCaptureUseful -> hasAnyContact). Selama ada
+  salah satu kontaknya, tetap di-scrape.
 
 Dua format CSV yang didukung:
 1. CRM_COLUMNS (13 kolom, crm-contact-YYYY-MM-DD.csv)

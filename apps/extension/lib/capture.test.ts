@@ -159,14 +159,66 @@ describe("place helpers", () => {
 });
 
 describe("isCaptureUseful", () => {
-  it("menerima nama + nomor telepon", () => {
+  it("menerima bisnis yang punya minimal satu kontak (telepon, WA, IG, sosmed, atau web)", () => {
     expect(isCaptureUseful(makeCapture())).toBe(true);
-    expect(isCaptureUseful(makeCapture({ category: "", address: "", phone: "0812" }))).toBe(true);
+    expect(
+      isCaptureUseful(
+        makeCapture({
+          phone: "",
+          whatsapp: "",
+          website: "",
+          socialUrl: "",
+          instagram: "@warungsteak",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isCaptureUseful(
+        makeCapture({
+          phone: "",
+          whatsapp: "",
+          website: "",
+          instagram: "",
+          socialUrl: "https://instagram.com/kopi",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isCaptureUseful(
+        makeCapture({
+          phone: "",
+          whatsapp: "",
+          instagram: "",
+          socialUrl: "",
+          website: "https://kopidua.com",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isCaptureUseful(
+        makeCapture({
+          phone: "",
+          instagram: "",
+          socialUrl: "",
+          website: "",
+          whatsapp: "081234567890",
+        }),
+      ),
+    ).toBe(true);
   });
 
-  it("menolak bisnis tanpa nomor telepon", () => {
-    expect(isCaptureUseful(makeCapture({ phone: "" }))).toBe(false);
-    expect(isCaptureUseful(makeCapture({ phone: "   " }))).toBe(false);
+  it("menolak bisnis tanpa kontak sama sekali", () => {
+    expect(
+      isCaptureUseful(
+        makeCapture({
+          phone: "",
+          whatsapp: "",
+          instagram: "",
+          socialUrl: "",
+          website: "",
+        }),
+      ),
+    ).toBe(false);
   });
 
   it("menolak nama kosong", () => {

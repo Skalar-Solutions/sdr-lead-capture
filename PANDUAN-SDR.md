@@ -94,7 +94,7 @@ Sisanya kosong karena memang tidak ada di Google Maps.
 |---|---|
 | **HOT** | Bisnis ini belum punya website. Biasanya prospek yang cocok ditawari website. |
 | **Sudah disimpan** | Bisnis ini sudah pernah masuk daftar, jadi tidak disimpan dua kali. |
-| **Tanpa telepon** | Bisnis tidak mencantumkan nomor telepon di Maps sehingga otomatis dilewati. |
+| **Tanpa kontak** | Bisnis tidak punya kontak sama sekali (telepon, WA, IG/sosmed, maupun website kosong semua) sehingga dilewati. |
 | **Tidak terbaca** | Data bisnisnya gagal diambil. Coba ambil ulang nanti. |
 | **Dilewati** | Tidak sempat diproses karena proses dihentikan. |
 

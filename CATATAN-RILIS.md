@@ -17,7 +17,7 @@ Yang berubah:
 - **Dua format ekspor CSV:**
   - **CSV CRM** (`crm-contact-YYYY-MM-DD.csv`): tetap 13 kolom sesuai template impor CRM.
   - **CSV SDR Lengkap** (`sdr-leads-lengkap-YYYY-MM-DD.csv`): 21 kolom berisi seluruh data scrape dan hasil evaluasi/tagging SDR.
-- **Kebersihan & filter telepon:** nomor telepon otomatis dinormalisasi menjadi angka murni (tanpa spasi/tanda hubung), dan bisnis tanpa nomor telepon dilewati (ditandai **Tanpa telepon** pada mode Ambil Semua).
+- **Kebersihan & filter kontak:** nomor telepon otomatis dinormalisasi menjadi angka murni (tanpa spasi/tanda hubung), dan bisnis yang tidak punya kontak sama sekali (tanpa telepon, WA, IG/sosmed, maupun website) dilewati (ditandai **Tanpa kontak** pada mode Ambil Semua). Selama ada salah satu kontaknya, bisnis tetap masuk.
 - **Migrasi data lama otomatis:** data yang sudah tersimpan dari versi sebelumnya otomatis dilengkapi field tagging default saat dibuka, tanpa merusak data lama.
 
 ---

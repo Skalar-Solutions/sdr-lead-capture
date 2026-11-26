@@ -8,7 +8,7 @@ import { browser } from "wxt/browser";
 
 import { CaptureCard } from "@/components/capture-card";
 import type { ScrapedPlace } from "@/entrypoints/content/scraper";
-import { isCaptureUseful, toCapture, type Capture } from "@/lib/capture";
+import { hasAnyContact, isCaptureUseful, toCapture, type Capture } from "@/lib/capture";
 import { buildCsvFilename, capturesToCsv } from "@/lib/csv-template";
 import { downloadCsvFile } from "@/lib/download";
 import { addCapture, countCaptures, openDashboard, readCaptures } from "@/lib/store";
@@ -61,8 +61,8 @@ export default function App() {
           if (!isCaptureUseful(next)) {
             setSource({
               tone: "warn",
-              text: !next.phone
-                ? `${response.data.companyName} tidak punya nomor telepon — dilewati.`
+              text: !hasAnyContact(next)
+                ? `${response.data.companyName} tidak punya kontak (telepon/WA/IG/web) — dilewati.`
                 : "Data belum lengkap. Buka detail bisnisnya, lalu coba lagi.",
             });
           } else {

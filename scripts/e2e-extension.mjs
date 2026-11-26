@@ -96,7 +96,7 @@ try {
     throw new Error(`Data tagging tidak tersimpan sesuai edit: ${JSON.stringify(first)}`);
   }
 
-  // 2b. Bulk scrape dari daftar hasil pencarian (3 punya telepon + 1 tanpa telepon)
+  // 2b. Bulk scrape dari daftar hasil pencarian (3 punya kontak: telp / web / IG only + 1 tanpa kontak)
   const places = [
     { id: "0x1:0xa1", name: "Kopi Cipete Satu", phone: "0811-1111-111", web: "" },
     {
@@ -108,12 +108,12 @@ try {
     {
       id: "0x1:0xa3",
       name: "Kopi Cipete Tiga",
-      phone: "0813-3333-333",
+      phone: "",
       web: "https://www.instagram.com/kopitiga/",
     },
     {
       id: "0x1:0xa4",
-      name: "Kopi Tanpa Telp",
+      name: "Kopi Tanpa Kontak",
       phone: "",
       web: "",
     },
@@ -179,11 +179,11 @@ try {
   await search.getByRole("button", { name: /Ambil Semua/ }).click();
   await search.getByRole("button", { name: "Mulai Ambil" }).click();
   await search.getByRole("button", { name: /Simpan 3 ke CSV/ }).waitFor({ timeout: 30000 });
-  await search.getByText("Tanpa telepon").first().waitFor({ timeout: 5000 });
+  await search.getByText("Tanpa kontak").first().waitFor({ timeout: 5000 });
   await search.screenshot({ path: path.join(outDir, "bulk-review.png") });
   await search.getByRole("button", { name: /Simpan 3 ke CSV/ }).click();
   await search.waitForSelector("text=3 lead tersimpan", { timeout: 10000 });
-  console.log("bulk: 3 lead tersimpan (1 tanpa telepon dilewati)");
+  console.log("bulk: 3 lead tersimpan (1 tanpa kontak dilewati)");
 
   // Scrape ulang -> semua harus terdeteksi duplikat / tanpa telepon.
   await search.getByRole("button", { name: "Ambil Lagi" }).click();

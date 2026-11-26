@@ -4,7 +4,7 @@ import { ClipboardList, ListChecks, RefreshCw, Target, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CaptureCard } from "@/components/capture-card";
-import { isCaptureUseful, toCapture, type Capture } from "@/lib/capture";
+import { hasAnyContact, isCaptureUseful, toCapture, type Capture } from "@/lib/capture";
 import { addCapture, countCaptures, openDashboard } from "@/lib/store";
 
 import { findFeed } from "../bulk";
@@ -45,8 +45,8 @@ export function ContentApp() {
         setSaved(false);
         setNotice(
           data.companyName
-            ? !next.phone
-              ? `${data.companyName} tidak punya nomor telepon — dilewati.`
+            ? !hasAnyContact(next)
+              ? `${data.companyName} tidak punya kontak (telepon/WA/IG/web) — dilewati.`
               : "Data belum lengkap. Tunggu detail bisnis terbuka, lalu coba lagi."
             : "Klik salah satu bisnis di Google Maps dulu.",
         );

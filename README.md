@@ -31,7 +31,7 @@ Yang otomatis terisi dari Google Maps:
 - Nama bisnis
 - Kategori (mis. Steakhouse, Klinik, Salon)
 - Alamat lengkap
-- Nomor telepon (angka murni tanpa spasi/tanda hubung; bisnis tanpa nomor telepon dilewati)
+- Nomor telepon (angka murni tanpa spasi/tanda hubung; bisnis tanpa kontak sama sekali — telepon/WA/IG/sosmed/website kosong semua — dilewati)
 - Negara: Indonesia
 - Tipe kontak: Vendor
 - Tagging default (Status Website, Celah Digital, Peluang Solusi, Prioritas) yang bisa diedit sebelum disimpan
