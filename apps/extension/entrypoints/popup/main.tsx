@@ -13,7 +13,7 @@ ReactDOM.createRoot(container).render(
   <React.StrictMode>
     <TooltipProvider>
       <App />
-      <Toaster position="top-center" richColors closeButton />
+      <Toaster position="top-center" closeButton />
     </TooltipProvider>
   </React.StrictMode>,
 );

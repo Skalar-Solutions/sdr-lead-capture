@@ -120,7 +120,7 @@ export default function App() {
 
   if (!ready) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-40 items-center justify-center text-xs text-muted-foreground">
         Memuat...
       </div>
     );
@@ -149,9 +149,9 @@ export default function App() {
           <CaptureCard capture={capture} saving={saving} saved={saved} onSave={handleSave} />
         ) : (
           <Card className="gap-0 py-0">
-            <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
-              <MapPin className="size-6 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+            <CardContent className="flex flex-col items-center gap-2.5 py-6 text-center">
+              <MapPin className="size-5 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
                 Buka Google Maps dan klik satu tempat untuk mulai capture.
               </p>
               <Button

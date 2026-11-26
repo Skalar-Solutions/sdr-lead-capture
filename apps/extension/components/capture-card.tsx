@@ -19,7 +19,7 @@ interface CaptureCardProps {
 function Row({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
-    <div className="grid grid-cols-[72px_1fr] gap-2 text-xs">
+    <div className="grid grid-cols-[64px_1fr] gap-2 text-xs">
       <span className="text-muted-foreground">{label}</span>
       <span className="break-words font-medium">{value}</span>
     </div>
@@ -33,15 +33,15 @@ export function CaptureCard({ capture, saving, saved, elevated, onSave }: Captur
     <Card
       className={cn(
         "gap-0 overflow-hidden py-0",
-        elevated ? "rounded-xl border bg-card shadow-2xl" : "rounded-none border-0 shadow-none",
+        elevated ? "rounded-lg border bg-card shadow-lg" : "rounded-none border-0 shadow-none",
       )}
     >
-      <CardHeader className="border-b py-3">
+      <CardHeader className="border-b py-2.5">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-sm leading-tight">{capture.companyName || "(tanpa nama)"}</CardTitle>
+          <CardTitle className="leading-tight">{capture.companyName || "(tanpa nama)"}</CardTitle>
           <div className="flex shrink-0 gap-1">
             {hot ? (
-              <Badge variant="destructive" className="gap-1">
+              <Badge variant="signal" className="gap-1">
                 <Flame className="size-3" /> HOT
               </Badge>
             ) : null}
@@ -55,8 +55,8 @@ export function CaptureCard({ capture, saving, saved, elevated, onSave }: Captur
         <Row label="Alamat" value={capture.address} />
         <Row label="Telepon" value={capture.phone} />
         <Row
-          label="Website"
-          value={capture.website || (capture.socialUrl ? `${capture.socialType}: ${capture.socialUrl}` : "")}
+          label={capture.website ? "Website" : "Sosmed"}
+          value={capture.website || capture.socialUrl}
         />
         <Row label="Instagram" value={capture.instagram} />
         <Row

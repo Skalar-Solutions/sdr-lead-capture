@@ -41,7 +41,7 @@ export function ContentApp() {
     setCapture(next);
     setSaved(false);
     setNotice(
-      `Terekstrak: ${data.companyName}${data.isSocialMediaOnly ? ` · ${data.socialType} only` : ""}`,
+      `Terekstrak: ${data.companyName}${data.isSocialMediaOnly ? ` · hanya ${data.socialType}` : ""}`,
     );
   }, []);
 
@@ -71,23 +71,23 @@ export function ContentApp() {
 
   if (!open) {
     return (
-      <div className="fixed bottom-6 right-6 z-[2147483647] flex flex-col items-end gap-2">
+      <div className="fixed bottom-6 right-6 z-[2147483647] flex flex-col items-end gap-2 font-sans">
         {notice ? (
           <div className="max-w-[320px] rounded-md bg-foreground px-3 py-1.5 text-xs text-background shadow-lg">
             {notice}
           </div>
         ) : null}
-        <Button size="lg" className="rounded-full shadow-xl" onClick={handleOpen}>
+        <Button size="lg" className="rounded-lg shadow-lg" onClick={handleOpen}>
           <Target className="size-4" />
           SDR Capture
-          {savedCount > 0 ? <Badge variant="secondary">{savedCount}</Badge> : null}
+          {savedCount > 0 ? <Badge variant="signal">{savedCount}</Badge> : null}
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-[2147483647] w-[400px] max-w-[calc(100vw-2rem)]">
+    <div className="fixed bottom-6 right-6 z-[2147483647] w-[400px] max-w-[calc(100vw-2rem)] font-sans">
       <div className="mb-2 flex items-center gap-1 rounded-md bg-foreground px-2 py-1.5 text-xs text-background shadow-lg">
         <span className="min-w-0 flex-1 truncate">{notice || "Capture lead dari Maps"}</span>
         <Button
@@ -128,7 +128,7 @@ export function ContentApp() {
           onSave={handleSave}
         />
       ) : (
-        <div className="rounded-xl border bg-card px-4 py-6 text-center text-xs text-muted-foreground shadow-2xl">
+        <div className="rounded-lg border bg-card px-4 py-5 text-center text-xs text-muted-foreground shadow-lg">
           Klik salah satu tempat di Google Maps, lalu tekan tombol refresh.
         </div>
       )}

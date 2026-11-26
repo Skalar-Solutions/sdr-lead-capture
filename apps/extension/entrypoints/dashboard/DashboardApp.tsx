@@ -121,12 +121,12 @@ export default function DashboardApp() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl space-y-4 p-6">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Hasil Scrape</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-lg font-semibold tracking-tight">Hasil Scrape</h1>
+            <p className="text-xs text-muted-foreground">
               Tersimpan lokal di browser ini. Download CSV kalau sudah selesai.
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function DashboardApp() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4">
-              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-xl font-semibold">{stats.total}</p>
             </CardContent>
           </Card>
           <Card className="py-4">
@@ -174,7 +174,7 @@ export default function DashboardApp() {
               <CardTitle className="text-xs font-medium text-muted-foreground">Hari ini</CardTitle>
             </CardHeader>
             <CardContent className="px-4">
-              <p className="text-2xl font-bold">{stats.today}</p>
+              <p className="text-xl font-semibold">{stats.today}</p>
             </CardContent>
           </Card>
           <Card className="py-4">
@@ -184,8 +184,8 @@ export default function DashboardApp() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex items-center gap-2 px-4">
-              <p className="text-2xl font-bold">{stats.noWebsite}</p>
-              <Flame className="size-4 text-destructive" />
+              <p className="text-xl font-semibold">{stats.noWebsite}</p>
+              <Flame className="size-4 text-muted-foreground" />
             </CardContent>
           </Card>
           <Card className="py-4">
@@ -195,7 +195,7 @@ export default function DashboardApp() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4">
-              <p className="text-2xl font-bold">{stats.socialOnly}</p>
+              <p className="text-xl font-semibold">{stats.socialOnly}</p>
             </CardContent>
           </Card>
         </div>
@@ -240,7 +240,7 @@ export default function DashboardApp() {
 
               {!loading && pageItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={6} className="py-10 text-center text-xs text-muted-foreground">
                     Belum ada data. Buka Google Maps, klik satu tempat, lalu capture.
                   </TableCell>
                 </TableRow>
@@ -253,9 +253,9 @@ export default function DashboardApp() {
                   </TableCell>
                   <TableCell className="align-top">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold">{capture.companyName || "(tanpa nama)"}</span>
+                      <span className="text-sm font-medium">{capture.companyName || "(tanpa nama)"}</span>
                       {!hasRealWebsite(capture) ? (
-                        <Badge variant="destructive" className="gap-1">
+                        <Badge variant="signal" className="gap-1">
                           <Flame className="size-3" /> HOT
                         </Badge>
                       ) : null}
@@ -274,7 +274,7 @@ export default function DashboardApp() {
                         href={capture.website}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 break-all text-primary underline-offset-2 hover:underline"
+                        className="inline-flex items-center gap-1 break-all text-foreground underline-offset-2 hover:underline"
                       >
                         {capture.website}
                         <ExternalLink className="size-3 shrink-0" />
@@ -286,7 +286,7 @@ export default function DashboardApp() {
                           href={capture.socialUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="block break-all text-primary underline-offset-2 hover:underline"
+                          className="block break-all text-foreground underline-offset-2 hover:underline"
                         >
                           {capture.socialUrl}
                         </a>
@@ -311,7 +311,7 @@ export default function DashboardApp() {
                       title="Hapus baris"
                       onClick={() => setDeleteTarget(capture)}
                     >
-                      <Trash2 className="size-4 text-destructive" />
+                      <Trash2 className="size-4 text-muted-foreground transition-colors hover:text-destructive" />
                     </Button>
                   </TableCell>
                 </TableRow>
