@@ -14,20 +14,25 @@ Capture business leads from Google Maps and export them to CSV. Offline, local-o
 
 ## Detailed description
 
-SDR Lead Capture membantu tim sales mengumpulkan data bisnis dari Google Maps
-dan mengubahnya menjadi file CSV yang siap diimpor ke CRM.
+SDR Lead Capture membantu tim sales mengumpulkan data bisnis dari Google Maps,
+menilainya langsung, dan mengubahnya menjadi file CSV yang siap diimpor ke CRM.
 
 Buka Google Maps, klik satu tempat, lalu klik tombol SDR Capture. Extension
 membaca nama, kategori, alamat, telepon, website, rating, dan link Maps dari
-panel detail yang sedang terbuka. Semua data disimpan lokal di Chrome — tidak
-ada akun, server, analytics, atau data yang dikirim keluar.
+panel detail yang sedang terbuka. Sebelum menyimpan, tim SDR bisa mengisi
+status website, celah digital, peluang solusi, prioritas, PIC, dan catatan
+sales. Semua data disimpan lokal di Chrome — tidak ada akun, server, analytics,
+atau data yang dikirim keluar.
 
 Fitur:
 
 - Ambil data bisnis dari panel Google Maps yang sedang terbuka.
+- Ambil banyak bisnis sekaligus (20/50/100) dari halaman hasil pencarian.
+- Evaluasi & tagging SDR: status website, celah digital, peluang solusi,
+  prioritas 1–5, PIC, dan catatan sales.
 - Simpan ke penyimpanan lokal Chrome dengan deteksi duplikat otomatis.
-- Dashboard untuk mencari, memeriksa, menghapus, dan mengekspor data.
-- Export CSV 13 kolom yang mengikuti template kontak CRM.
+- Dashboard Data Lead untuk mencari, memeriksa, menghapus, dan mengekspor data.
+- Dua format ekspor: CSV CRM 13 kolom dan CSV SDR Lengkap 21 kolom.
 - Tandai lead tanpa website sebagai HOT.
 - Bekerja offline setelah extension terpasang.
 - Permission minimal: hanya storage dan akses ke halaman Google Maps.
@@ -37,11 +42,11 @@ Cara pakai:
 1. Buka google.com/maps atau google.co.id/maps.
 2. Klik satu tempat sampai panel detailnya terbuka.
 3. Klik ikon extension atau tombol SDR Capture di halaman.
-4. Periksa ringkasan, lalu klik Simpan ke CSV.
-5. Ulangi untuk tempat lain, buka Data, lalu Download CSV.
+4. Periksa ringkasan dan isi evaluasi SDR (opsional), lalu klik Simpan ke CSV.
+5. Ulangi untuk tempat lain, atau klik Ambil Semua untuk daftar pencarian.
+6. Buka Lihat Data, lalu pilih CSV CRM atau CSV SDR Lengkap.
 
-Catatan: extension ini mengambil satu tempat pada satu waktu, bukan scraper
-massal. Data hanya tersimpan di browser tempat extension dipasang. Download CSV
+Catatan: data hanya tersimpan di browser tempat extension dipasang. Download CSV
 sebelum menghapus data atau meng-uninstall extension.
 
 ## Category
@@ -102,7 +107,7 @@ https://github.com/Skalar-Solutions/sdr-lead-capture/issues
 ## Submission checklist
 
 - [ ] Aktifkan GitHub Pages dan buka URL privacy policy.
-- [ ] Upload `release/sdr-lead-capture-1.0.5-chrome.zip`.
+- [ ] Upload `release/sdr-lead-capture-1.0.6-chrome.zip`.
 - [ ] Isi listing dengan teks di atas.
 - [ ] Upload ketiga aset di `store/`.
 - [ ] Pilih kategori Productivity, bahasa Indonesian.

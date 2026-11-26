@@ -74,9 +74,13 @@ Kalau nanti extension sudah ada di Chrome Web Store, cara pasangnya cukup klik
 4. Kalau kotak tidak muncul, klik tombol bulat **SDR Capture** di kanan bawah
    halaman Maps.
 5. Periksa ringkasan data bisnis tersebut.
-6. Klik **Simpan ke CSV**.
-7. Ulangi untuk bisnis berikutnya.
-8. Kalau sudah selesai, klik **Download CSV**.
+6. (Opsional) Isi evaluasi SDR langsung di kotak capture: **Status Website**,
+   **Celah Digital**, **Peluang Solusi**, **Prioritas**, dan **Catatan & PIC**.
+   Kalau dikosongkan, extension memberi nilai awal otomatis.
+7. Klik **Simpan ke CSV**.
+8. Ulangi untuk bisnis berikutnya.
+9. Kalau sudah selesai, buka **Lihat Data** lalu pilih **CSV CRM** atau
+   **CSV SDR Lengkap**.
 
 File CSV akan masuk ke folder **Downloads** komputer kamu.
 
@@ -99,9 +103,18 @@ disimpan.
 
 ## Membuka CSV
 
+Ada dua file yang bisa di-download dari halaman **Data Lead**:
+
+| Tombol | File | Isinya |
+|---|---|---|
+| **CSV CRM** | `crm-contact-YYYY-MM-DD.csv` | 13 kolom, siap diimpor ke CRM |
+| **CSV SDR Lengkap** | `sdr-leads-lengkap-YYYY-MM-DD.csv` | 21 kolom, termasuk status website, celah digital, solusi, prioritas, PIC, dan catatan sales |
+
+Cara membuka:
+
 - **Excel**: klik dua kali file CSV-nya.
 - **Google Sheets**: buka sheets.google.com → File → Import → upload CSV.
-- **Langsung ke CRM**: gunakan fitur import kontak di CRM, pilih file CSV ini.
+- **Langsung ke CRM**: gunakan fitur import kontak di CRM, pilih **CSV CRM**.
   Kolomnya sudah disamakan dengan template CRM, jadi tinggal cocokkan.
 
 Kalau di Excel angka **0 di depan nomor telepon hilang**, itu perilaku Excel,
@@ -130,6 +143,17 @@ telepon sebagai "Text" sebelum membuka.
 
 Kolom bertanda `*` wajib untuk CRM. Dua-duanya sudah terisi otomatis.
 
+### Kolom tambahan di CSV SDR Lengkap
+
+`ID`, `Waktu Capture`, `Nama Perusahaan`, `Kategori`, `Alamat`,
+`Nomor Telepon`, `WhatsApp`, `Website`, `Sosmed/Linktree`, `Instagram`,
+`Google Rating`, `Jumlah Ulasan`, `Status Website`, `HOT Lead`,
+`Celah Digital`, `Peluang Solusi`, `Prioritas`, `PIC Nama`, `PIC Jabatan`,
+`Catatan Sales`, `Link Google Maps`.
+
+Kolom `Celah Digital` dan `Peluang Solusi` bisa berisi lebih dari satu nilai,
+dipisahkan dengan `;`.
+
 ---
 
 ## Melihat dan mengelola data
@@ -139,10 +163,11 @@ Klik tombol **Lihat Data** di popup, atau ikon clipboard di kotak capture di Map
 Di halaman itu kamu bisa:
 
 - melihat semua lead yang sudah disimpan
-- mencari berdasarkan nama, alamat, atau telepon
+- mencari berdasarkan nama, alamat, telepon, status website, PIC, atau catatan
+- membuka detail lead untuk melihat celah digital, solusi, dan catatan sales
 - menghapus satu lead
 - menghapus semua data
-- download CSV
+- download **CSV CRM** atau **CSV SDR Lengkap**
 
 Data ini tersimpan di Chrome. Kalau extension di-uninstall, datanya ikut hilang.
 **Download CSV dulu sebelum uninstall.**
@@ -157,6 +182,7 @@ Data ini tersimpan di Chrome. Kalau extension di-uninstall, datanya ikut hilang.
 | Data yang muncul kosong | Klik dulu salah satu tempat sampai panel detail terbuka, lalu klik tombol refresh ↻ di kotak capture |
 | Tombol "Ambil Semua" tidak muncul | Pastikan sedang di halaman hasil pencarian dan daftar bisnis terlihat di panel kiri, lalu refresh tab |
 | Bulk scrape berhenti di tengah | Google Maps mungkin membatasi. Coba jumlah lebih kecil, jeda sebentar, lalu ulangi |
+| Bisnis dilewati dengan tanda "Tanpa kontak" | Bisnis itu tidak punya telepon, WA, IG/sosmed, maupun website. Buka Maps untuk cek manual kalau masih mau dihubungi |
 | Tombol "Simpan ke CSV" tidak bereaksi | Tutup popup, buka lagi, coba simpan sekali lagi |
 | CSV kosong | Pastikan sudah klik "Simpan ke CSV", bukan cuma melihat ringkasan |
 | Extension hilang setelah update Chrome | Buka `chrome://extensions` → Load unpacked → pilih folder extension lagi |
@@ -183,6 +209,17 @@ jumlah, lalu klik **Mulai Ambil**. Extension akan membuka tiap tempat satu per
 satu dan menampilkan checklist sebelum disimpan. Tetap pakai jumlah wajar dan
 jangan jalankan terlalu agresif.
 
+**Apa arti HOT dan Prioritas?**
+HOT berarti bisnis itu belum punya website, jadi biasanya paling cocok
+ditawari jasa website. Prioritas memakai skala 1–5 bintang; 5 = HOT. Nilai awal
+diisi otomatis, tapi bisa kamu ubah sebelum menyimpan.
+
+**Apa bedanya CSV CRM dan CSV SDR Lengkap?**
+**CSV CRM** berisi 13 kolom sesuai template impor CRM. **CSV SDR Lengkap**
+berisi 21 kolom, termasuk hasil evaluasi (status website, celah digital,
+solusi, prioritas, PIC, dan catatan sales). Pakai CSV CRM untuk impor ke CRM,
+dan CSV SDR Lengkap untuk arsip/evaluasi tim.
+
 **Bisa dipakai di HP?**
 Belum. Hanya di Chrome desktop (Windows/Mac/Linux).
 
@@ -205,7 +242,10 @@ link-nya tidak lengkap).
 ## Untuk yang paham teknis
 
 - Kode ada di `apps/extension` (WXT + React).
-- Kolom CSV diatur di `apps/extension/lib/csv-template.ts`.
+- Kolom CSV diatur di `apps/extension/lib/csv-template.ts`:
+  `CRM_COLUMNS` (13 kolom) dan `SDR_DETAILED_COLUMNS` (21 kolom), dengan
+  `capturesToCsv()` / `capturesToDetailedCsv()` dan
+  `buildCsvFilename("crm" | "detailed")`.
 - Build: `pnpm install && pnpm build && pnpm zip`.
 - Release baru: naikkan versi di `apps/extension/package.json` + `wxt.config.ts`, commit, lalu buat tag `vX.Y.Z` dan push tag. Workflow `.github/workflows/release.yml` otomatis test, build, zip, dan attach zip ke GitHub Release.
 - Smoke test ke Google Maps asli: `pnpm build && pnpm smoke:maps`.

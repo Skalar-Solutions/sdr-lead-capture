@@ -20,6 +20,14 @@ Yang berubah:
 - **Kebersihan & filter kontak:** nomor telepon otomatis dinormalisasi menjadi angka murni (tanpa spasi/tanda hubung), dan bisnis yang tidak punya kontak sama sekali (tanpa telepon, WA, IG/sosmed, maupun website) dilewati (ditandai **Tanpa kontak** pada mode Ambil Semua). Selama ada salah satu kontaknya, bisnis tetap masuk.
 - **Migrasi data lama otomatis:** data yang sudah tersimpan dari versi sebelumnya otomatis dilengkapi field tagging default saat dibuka, tanpa merusak data lama.
 
+**Cara update dari 1.0.5:**
+
+1. Download `sdr-lead-capture-1.0.6-chrome.zip`.
+2. Extract ke folder baru (jangan timpa folder lama).
+3. Buka `chrome://extensions` → hapus extension lama → **Load unpacked** →
+   pilih folder baru.
+4. Data lama tetap ada dan otomatis dilengkapi nilai tagging default.
+
 ---
 
 ## 1.0.5 — 26 November 2026

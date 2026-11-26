@@ -43,6 +43,25 @@ Kalau berhasil, ikon hitam putih SDR Lead Capture akan muncul di toolbar Chrome.
 Kalau kotak data tidak muncul, klik tombol **SDR Capture** di kanan bawah
 halaman Maps.
 
+### Isi evaluasi SDR (opsional, tapi berguna)
+
+Sebelum menyimpan, kamu bisa langsung menilai prospek di kotak data:
+
+| Bagian | Artinya |
+|---|---|
+| **Status Website** | `Tidak Ada`, `Outdated` (website lama), `Bad UX` (sulit dipakai), atau `Lumayan` |
+| **Celah Digital** | Masalah yang terlihat, mis. Tanpa Website, Not Mobile-Friendly, No Online Order, Sosmed Only |
+| **Peluang Solusi** | Layanan yang cocok ditawarkan, mis. Web Dev, E-Commerce, Redesign, SEO |
+| **Prioritas** | 1–5 bintang. **5 = HOT** |
+| **Catatan & PIC** | Nama PIC, jabatan, dan catatan hasil percakapan |
+
+Kalau tidak diisi, extension memberi nilai awal otomatis:
+
+- Bisnis tanpa website → status **Tidak Ada**, celah **Tanpa Website**,
+  solusi **Web Dev**, prioritas **5 (HOT)**.
+- Bisnis yang hanya punya link sosmed → ditambah celah **Sosmed Only** dan
+  catatan link sosmed-nya.
+
 ---
 
 ## 3. Ambil banyak bisnis sekaligus
@@ -75,7 +94,7 @@ terbaca**. Hasil yang sudah terbaca tetap bisa disimpan.
 3. File masuk ke folder **Downloads** komputer.
 4. Buka file itu dengan Excel, atau upload ke Google Sheets.
 
-Isi file sudah disamakan dengan template CRM:
+**CSV CRM** berisi 13 kolom sesuai template CRM:
 
 `*Nama`, `Sapaan`, `URL Foto`, `*Tipe Kontak`, `Grup Kontak`, `Perusahaan`,
 `Alamat Penagihan`, `Negara`, `Provinsi`, `Kota`, `Email`, `Nomor Telepon`,
@@ -83,6 +102,11 @@ Isi file sudah disamakan dengan template CRM:
 
 Yang terisi otomatis: nama, kategori, alamat, telepon, negara, dan tipe kontak.
 Sisanya kosong karena memang tidak ada di Google Maps.
+
+**CSV SDR Lengkap** berisi 21 kolom: data Maps + Status Website, HOT Lead,
+Celah Digital, Peluang Solusi, Prioritas, PIC Nama/Jabatan, Catatan Sales,
+WhatsApp, dan Link Google Maps. Pakai file ini untuk evaluasi tim atau
+follow-up.
 
 ![Contoh halaman Data Lead](store/screenshot-1-dashboard.png)
 
