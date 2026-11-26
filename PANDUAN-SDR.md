@@ -15,7 +15,7 @@ Google Sheets.
 
 > Sudah dipasang oleh admin? Lewati ke bagian **2. Ambil satu bisnis**.
 
-1. Minta file **`sdr-lead-capture-1.0.7-chrome.zip`** ke admin.
+1. Minta file **`sdr-lead-capture-1.0.8-chrome.zip`** ke admin.
 2. **Extract** file itu ke folder yang mudah diingat, misalnya
    `Dokumen/SDR Lead Capture`.
    **Jangan hapus folder ini** setelah dipasang.
@@ -109,6 +109,18 @@ WhatsApp, dan Link Google Maps. Pakai file ini untuk evaluasi tim atau
 follow-up.
 
 ![Contoh halaman Data Lead](store/screenshot-1-dashboard.png)
+
+### Cari dan filter lead
+
+Di halaman **Lihat Data**:
+
+- Ketik nama, kategori, telepon, atau catatan di kolom pencarian.
+- Klik **HOT** untuk hanya melihat lead yang belum punya website.
+- Klik **Prioritas 5** untuk melihat lead paling potensial.
+- Klik **Belum ada PIC** untuk melihat lead yang belum dipegang.
+- Ubah urutan lewat menu **Terbaru** (bisa juga Prioritas tertinggi atau Nama A–Z).
+- Klik tanda **>** di kiri untuk membuka detail lengkap: alamat, WhatsApp,
+  website/sosmed, semua celah digital, solusi, PIC, catatan, dan link Maps.
 
 ---
 

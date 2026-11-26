@@ -46,9 +46,9 @@ Sisanya dibiarkan kosong karena memang tidak ada di Google Maps.
 
 Saat ini extension dipasang manual (belum di Chrome Web Store).
 
-1. Minta file **`sdr-lead-capture-1.0.7-chrome.zip`** ke yang mengirim ini,
+1. Minta file **`sdr-lead-capture-1.0.8-chrome.zip`** ke yang mengirim ini,
    atau download dari
-   [GitHub Releases](https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.7).
+   [GitHub Releases](https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.8).
 2. **Extract** file zip itu ke folder yang gampang diingat, misalnya
    `Dokumen/SDR Lead Capture`.
    Penting: jangan hapus folder ini setelah dipasang.
@@ -164,7 +164,10 @@ Di halaman itu kamu bisa:
 
 - melihat semua lead yang sudah disimpan
 - mencari berdasarkan nama, alamat, telepon, status website, PIC, atau catatan
-- membuka detail lead untuk melihat celah digital, solusi, dan catatan sales
+- memfilter cepat: **HOT**, **Prioritas 5**, atau **Belum ada PIC**
+- mengurutkan: **Terbaru**, **Prioritas tertinggi**, atau **Nama A–Z**
+- membuka detail lead untuk melihat alamat, WhatsApp, website, semua celah
+  digital/solusi, PIC, catatan sales, dan link Google Maps
 - menghapus satu lead
 - menghapus semua data
 - download **CSV CRM** atau **CSV SDR Lengkap**

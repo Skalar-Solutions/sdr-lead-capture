@@ -31,7 +31,7 @@ Fitur:
 - Evaluasi & tagging SDR: status website, celah digital, peluang solusi,
   prioritas 1–5, PIC, dan catatan sales.
 - Simpan ke penyimpanan lokal Chrome dengan deteksi duplikat otomatis.
-- Dashboard Data Lead untuk mencari, memeriksa, menghapus, dan mengekspor data.
+- Dashboard Data Lead dengan filter cepat (HOT / Prioritas 5 / Belum ada PIC), pencarian, urutan, detail per lead, dan hapus data.
 - Dua format ekspor: CSV CRM 13 kolom dan CSV SDR Lengkap 21 kolom.
 - Tandai lead tanpa website sebagai HOT.
 - Bekerja offline setelah extension terpasang.
@@ -107,7 +107,7 @@ https://github.com/Skalar-Solutions/sdr-lead-capture/issues
 ## Submission checklist
 
 - [ ] Aktifkan GitHub Pages dan buka URL privacy policy.
-- [ ] Upload `release/sdr-lead-capture-1.0.7-chrome.zip`.
+- [ ] Upload `release/sdr-lead-capture-1.0.8-chrome.zip`.
 - [ ] Isi listing dengan teks di atas.
 - [ ] Upload ketiga aset di `store/`.
 - [ ] Pilih kategori Productivity, bahasa Indonesian.

@@ -5,6 +5,36 @@ Detail teknis ada di [`HANDOVER.txt`](HANDOVER.txt).
 
 ---
 
+## 1.0.8 — 27 November 2026
+
+**Fokus: halaman Data Lead lebih rapi dan mudah dipakai.**
+
+Yang berubah:
+
+- **Daftar lead tidak lagi terpotong atau berdesakan.** Layout baru: nama,
+  status, dan prioritas di baris atas; kontak, sumber, PIC, dan celah digital di
+  baris kedua; catatan sales satu baris di bawahnya.
+- **Detail lengkap ada di panel yang bisa dibuka** per lead: alamat, WhatsApp,
+  website/sosmed, semua celah digital dan solusi, PIC, catatan, tanggal simpan,
+  dan link Google Maps.
+- **Filter cepat:** Semua, HOT, Prioritas 5, dan Belum ada PIC.
+- **Urutkan lead:** Terbaru, Prioritas tertinggi, atau Nama A–Z.
+- **Lebih ringkas di layar kecil:** kartu statistik jadi 2×2 dan daftar tetap
+  terbaca tanpa geser ke samping.
+- **Pencarian tetap mencakup** nama, kategori, telepon, status, PIC, dan catatan.
+
+Tidak ada perubahan format data atau CSV. Data lama tetap aman.
+
+**Cara update dari 1.0.7:**
+
+1. Download `sdr-lead-capture-1.0.8-chrome.zip`.
+2. Extract ke folder baru (jangan timpa folder lama).
+3. Buka `chrome://extensions` → hapus extension lama → **Load unpacked** →
+   pilih folder baru.
+4. Data lama tetap ada.
+
+---
+
 ## 1.0.7 — 26 November 2026
 
 **Fokus: perbaikan mode Ambil Semua untuk bisnis yang pernah diklik.**

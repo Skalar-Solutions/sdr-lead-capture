@@ -1,7 +1,7 @@
 ================================================================================
 HANDOVER - SDR LEAD CAPTURE (CSV EDITION)
 Tanggal : 26 November 2026
-Versi   : 1.0.7
+Versi   : 1.0.8
 Bentuk  : extension Chrome mandiri (tanpa backend)
 Repo    : /Users/bytedance/Vano/Code/sdr-lead-capture (branch: main)
 ================================================================================
@@ -19,15 +19,15 @@ FILE RILIS
 ----------
 Zip siap upload / share:
 
-  release/sdr-lead-capture-1.0.7-chrome.zip   (341 KB)
+  release/sdr-lead-capture-1.0.8-chrome.zip   (342 KB)
 
 Download internal:
 
-  https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.7
+  https://github.com/Skalar-Solutions/sdr-lead-capture/releases/tag/v1.0.8
 
 Folder unpacked untuk internal:
 
-  release/sdr-lead-capture-1.0.7/
+  release/sdr-lead-capture-1.0.8/
 
 Cara pakai zip:
   A. Distribusi internal: download dari GitHub Releases.
@@ -48,7 +48,7 @@ Workflow .github/workflows/release.yml otomatis:
 
 Nama asset: sdr-lead-capture-X.Y.Z-chrome.zip
 Isi zip hanya build extension (tanpa source/test/node_modules).
-Tag harus sama dengan versi, mis. tag v1.0.7 untuk versi 1.0.7.
+Tag harus sama dengan versi, mis. tag v1.0.8 untuk versi 1.0.8.
 
 Alternatif tanpa zip:
   chrome://extensions -> Load unpacked -> apps/extension/.output/chrome-mv3
@@ -66,7 +66,8 @@ CARA PAKAI
 5. Klik "Simpan ke CSV".
 6. Ulangi untuk tempat lain.
 7. Klik "Lihat Data" (popup) atau ikon clipboard (drawer) untuk buka halaman
-   Data Lead.
+   Data Lead. Di sini bisa filter cepat (HOT / Prioritas 5 / Belum ada PIC),
+   urutkan, dan buka detail per lead.
 8. Pilih "CSV CRM" (13 kolom) atau "CSV SDR Lengkap" (21 kolom).
 
 BULK SCRAPE
@@ -170,7 +171,7 @@ apps/extension/
   entrypoints/content/      scraper + drawer in-page
   entrypoints/content/bulk.ts       auto-scroll + buka tiap hasil pencarian
   entrypoints/content/ui/BulkPanel.tsx  checklist hasil bulk
-  entrypoints/dashboard/    Data Lead + export CSV CRM / SDR lengkap
+  entrypoints/dashboard/    Data Lead (list, filter, detail) + export CSV
   lib/capture.ts            tipe Capture, tagging default, migrasi, dedupe
   lib/csv-template.ts       TEMPLATE CSV CRM + SDR lengkap (ubah di sini)
   lib/csv-template.test.ts  tes kedua format CSV
@@ -239,7 +240,7 @@ CHROME WEB STORE (OPSIONAL)
 Distribusi utama saat ini: GitHub Releases (zip).
 Chrome Web Store butuh akun developer berbayar; aset di bawah ini siap kalau
 nanti mau publish ke store.
-- Paket      : release/sdr-lead-capture-1.0.7-chrome.zip
+- Paket      : release/sdr-lead-capture-1.0.8-chrome.zip
 - Screenshot : store/screenshot-1-dashboard.png (1280x800)
                store/screenshot-2-maps.png (1280x800)
 - Promo tile : store/promo-440x280.png
@@ -265,11 +266,12 @@ BATASAN / CATATAN
    tempat yang sama tidak menambah baris.
 5. Evaluasi/tagging hanya bisa diisi atau diubah sebelum lead disimpan. Setelah
    tersimpan belum ada layar edit; hapus lead lalu capture ulang kalau salah.
-6. Bundle total ~931 KB (content script 320 KB, content CSS 122 KB karena font
+6. Bundle total ~938 KB (content script 320 KB, content CSS 122 KB karena font
    Inter di-inline untuk shadow root, shared chunk 309 KB).
-7. Zip rilis 1.0.7 sudah berisi perbaikan bulk scrape untuk link yang pernah
-   dikunjungi, SDR tagging, migrasi data lama, dua format CSV, pembersihan nomor
-   telepon, auto-detect, dan bulk scrape. Regenerate dengan
+7. Zip rilis 1.0.8 sudah berisi dashboard Data Lead yang lebih rapi (list
+   ringkas, filter cepat, detail per lead), perbaikan bulk scrape untuk link yang
+   pernah dikunjungi, SDR tagging, migrasi data lama, dua format CSV,
+   pembersihan nomor telepon, auto-detect, dan bulk scrape. Regenerate dengan
    `pnpm build && pnpm zip` + update release/ sebelum distribusi.
 
 OPSIONAL: MEMBERESKAN INFRA LAMA
